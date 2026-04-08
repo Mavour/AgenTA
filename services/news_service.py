@@ -1,19 +1,52 @@
 import requests
+import logging
 import re
-from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 
 def fetch_crypto_news(limit: int = 10):
     try:
         url = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN"
         params = {"limit": limit}
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=15)
+        logger.info(f"News API response: {response.status_code}")
         
         if response.status_code == 200:
             data = response.json()
-            return data.get("Data", [])
-    except Exception:
-        pass
+            news_data = data.get("Data", [])
+            logger.info(f"Got {len(news_data)} news articles")
+            if news_data:
+                return news_data
+    except requests.exceptions.Timeout:
+        logger.error("News API timeout")
+    except requests.exceptions.ConnectionError:
+        logger.error("News API connection error")
+    except Exception as e:
+        logger.error(f"News API error: {e}")
+    
+    return fetch_news_fallback(limit)
+
+
+def fetch_news_fallback(limit: int = 10):
+    try:
+        url = "https://cryptopanic.com/api/v1/posts/"
+        params = {"auth_token": "public", "kind": "news", "limit": limit}
+        response = requests.get(url, params=params, timeout=15)
+        
+        if response.status_code == 200:
+            data = response.json()
+            results = data.get("results", [])
+            news = []
+            for item in results:
+                news.append({
+                    "title": item.get("title", "No title"),
+                    "source_info": {"name": item.get("domain", "Unknown")},
+                    "url": item.get("url", "")
+                })
+            return news
+    except Exception as e:
+        logger.error(f"Fallback news API error: {e}")
     
     return []
 
@@ -96,10 +129,12 @@ def get_crypto_prices():
             "fsyms": "BTC,ETH,SOL,XRP,ADA,DOGE",
             "tsyms": "USD"
         }
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=15)
+        logger.info(f"Price API response: {response.status_code}")
         
         if response.status_code == 200:
             data = response.json()
+            logger.info(f"Got prices for {len(data)} coins")
             lines = ["💰 *Harga Crypto Terkini:*\n"]
             
             for coin, price in data.items():
@@ -107,7 +142,38 @@ def get_crypto_prices():
                 lines.append(f"• {coin}: ${usd:,.2f}")
             
             return "\n".join(lines)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Price API error: {e}")
+    
+    return fetch_prices_fallback()
+
+
+def fetch_prices_fallback():
+    try:
+        url = "https://api.coingecko.com/api/v3/simple/price"
+        params = {
+            "ids": "bitcoin,ethereum,solana,ripple,cardano,dogecoin",
+            "vs_currencies": "usd"
+        }
+        response = requests.get(url, params=params, timeout=15)
+        
+        if response.status_code == 200:
+            data = response.json()
+            coin_map = {
+                "bitcoin": "BTC",
+                "ethereum": "ETH", 
+                "solana": "SOL",
+                "ripple": "XRP",
+                "cardano": "ADA",
+                "dogecoin": "DOGE"
+            }
+            lines = ["💰 *Harga Crypto Terkini:*\n"]
+            for coin_id, ticker in coin_map.items():
+                if coin_id in data:
+                    usd = data[coin_id]["usd"]
+                    lines.append(f"• {ticker}: ${usd:,.2f}")
+            return "\n".join(lines)
+    except Exception as e:
+        logger.error(f"Fallback price API error: {e}")
     
     return None
