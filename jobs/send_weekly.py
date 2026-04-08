@@ -1,8 +1,8 @@
 #!/bin/bash
 # Cron job untuk Weekly Report
 # Setup: crontab -e
-# Tambahkan baris ini (setiap Minggu jam 08:00 WITA = 00:00 UTC):
-# 0 0 * * 0 cd /path/to/AgenTA && python jobs/send_weekly.py >> /var/log/crypto_bot.log 2>&1
+# Tambahkan baris ini (setiap Senin jam 08:00 WITA = 00:00 UTC):
+# 0 0 * * 1 cd /path/to/AgenTA && python jobs/send_weekly.py >> /var/log/crypto_bot.log 2>&1
 
 import sys
 import os

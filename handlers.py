@@ -289,7 +289,7 @@ async def weekly_report_command(update: Update, context: ContextTypes.DEFAULT_TY
     schedule_msg = """
 ━━━━━━━━━━━━━━━━━━━━
 ⏰ *Jadwal Weekly Report*
-📅 Setiap Minggu, Jam 08:00 WITA
+📅 Setiap Senin, Jam 08:00 WITA
 
 Gunakan `/report` untuk melihat kapan saja."""
     

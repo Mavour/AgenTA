@@ -72,7 +72,7 @@ def get_schedule_message() -> str:
     return """⏰ *Jadwal Weekly Report*
 
 Laporan mingguan akan dikirim setiap:
-📅 **Minggu, Jam 08:00 WITA** (00:00 UTC)
+📅 **Senin, Jam 08:00 WITA** (00:00 UTC)
 
 Gunakan `/report` untuk melihat laporan kapan saja."""
 
