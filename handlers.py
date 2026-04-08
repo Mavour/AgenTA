@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 MENU_KEYBOARD = ReplyKeyboardMarkup(
     [
         [KeyboardButton("📊 Analisis Chart"), KeyboardButton("💬 Tanya Jawab")],
-        [KeyboardButton("📐 Hitung R:R"), KeyboardButton("📔 Journal")],
-        [KeyboardButton("📰 News"), KeyboardButton("💰 Harga")],
-        [KeyboardButton("📊 Report"), KeyboardButton("📖 Panduan")],
+        [KeyboardButton("📔 Journal"), KeyboardButton("📰 News")],
+        [KeyboardButton("💰 Harga"), KeyboardButton("📊 Report")],
+        [KeyboardButton("📖 Panduan")],
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
@@ -64,34 +64,6 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         format_help(),
-        parse_mode="Markdown",
-    )
-
-
-async def rr_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args or len(context.args) != 3:
-        await update.message.reply_text(
-            "⚠️ *Format salah!*\n\n"
-            "Gunakan: `/rr <entry> <sl> <tp>`\n"
-            "Contoh: `/rr 65000 63000 70000`",
-            parse_mode="Markdown",
-        )
-        return
-
-    try:
-        entry = float(context.args[0])
-        sl = float(context.args[1])
-        tp = float(context.args[2])
-    except ValueError:
-        await update.message.reply_text(
-            "⚠️ Angka tidak valid! Gunakan format:\n`/rr 65000 63000 70000`",
-            parse_mode="Markdown",
-        )
-        return
-
-    result = calculate_rr(entry, sl, tp)
-    await update.message.reply_text(
-        format_rr_result(result),
         parse_mode="Markdown",
     )
 
@@ -162,13 +134,6 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "💬 Tanya Jawab":
         await update.message.reply_text(
             "💬 Silakan ketik pertanyaan Anda seputar:\n\n• Konsep teknikal analysis\n• Penjelasan indikator\n• Strategi trading\n• Istilah kripto & trading",
-            parse_mode="Markdown",
-        )
-        return
-
-    if text == "📐 Hitung R:R":
-        await update.message.reply_text(
-            "📐 Masukkan entry, stop loss, dan take profit:\n\nFormat: `/rr <entry> <sl> <tp>`\nContoh: `/rr 65000 63000 70000`",
             parse_mode="Markdown",
         )
         return

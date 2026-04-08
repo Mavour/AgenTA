@@ -8,7 +8,6 @@ from handlers import (
     start,
     show_menu,
     help_command,
-    rr_command,
     journal_command,
     weekly_report_command,
     news_command,
@@ -33,7 +32,6 @@ async def run_bot():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("menu", show_menu))
     app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("rr", rr_command))
     app.add_handler(CommandHandler("journal", journal_command))
     app.add_handler(CommandHandler("report", weekly_report_command))
     app.add_handler(CommandHandler("news", news_command))
@@ -50,7 +48,6 @@ async def run_bot():
         BotCommand("start", "Mulai bot"),
         BotCommand("menu", "Menu utama"),
         BotCommand("help", "Panduan lengkap"),
-        BotCommand("rr", "Hitung Risk:Reward"),
         BotCommand("journal", "Riwayat analisis"),
         BotCommand("report", "Weekly report"),
         BotCommand("news", "Crypto news"),
