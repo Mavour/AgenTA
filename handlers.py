@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes
 from telegram.error import BadRequest
@@ -21,6 +22,9 @@ MENU_KEYBOARD = ReplyKeyboardMarkup(
     resize_keyboard=True,
     one_time_keyboard=False,
 )
+
+photo_cache = {}
+last_analysis_cache = {}
 
 
 async def _send_md(message, text, **kwargs):
@@ -101,11 +105,15 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     photo = update.message.photo[-1]
     caption = update.message.caption or ""
+    user_id = update.message.from_user.id
 
     try:
         file = await photo.get_file()
         image_bytes = await file.download_as_bytearray()
         image_bytes = bytes(image_bytes)
+
+        photo_cache[user_id] = (image_bytes, caption)
+        last_analysis_cache[user_id] = "chart"
 
         analysis = await analyze_chart(image_bytes, caption)
 
@@ -163,13 +171,21 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.chat.send_action(action="typing")
 
+    user_id = update.message.from_user.id
+    
+    context_hint = ""
+    if user_id in last_analysis_cache and last_analysis_cache[user_id] == "chart":
+        context_hint = "User baru saja mengirim foto chart dan mendapat analisis. Pertanyaan ini kemungkinan berkaitan dengan chart tersebut. "
+
     status_msg = await update.message.reply_text(
         "⏳ *Sedang memproses pertanyaan...*\n\nMohon tunggu sebentar.",
         parse_mode="Markdown"
     )
 
     try:
-        response = await answer_question(text)
+        full_text = context_hint + text
+        response = await answer_question(full_text)
+        last_analysis_cache[user_id] = "text"
         await status_msg.edit_text(response, parse_mode="Markdown")
 
     except Exception as e:
@@ -191,16 +207,23 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await _edit_text_msg(query.message, "🔄 Menganalisis ulang...")
         await query.message.chat.send_action(action="typing")
 
+        user_id = query.from_user.id
+
         try:
             msg = query.message
+            image_bytes = None
+            caption = ""
+
             if msg.reply_to_message and msg.reply_to_message.photo:
                 photo = msg.reply_to_message.photo[-1]
                 caption = msg.reply_to_message.caption or ""
-
                 file = await photo.get_file()
                 image_bytes = await file.download_as_bytearray()
                 image_bytes = bytes(image_bytes)
+            elif user_id in photo_cache:
+                image_bytes, caption = photo_cache[user_id]
 
+            if image_bytes:
                 analysis = await analyze_chart(image_bytes, caption)
 
                 keyboard = [
@@ -210,7 +233,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await _edit_text_msg(query.message, analysis, reply_markup=reply_markup)
             else:
-                await _edit_text_msg(query.message, "⚠️ Tidak dapat menemukan foto asli. Silakan kirim ulang foto.")
+                await _edit_text_msg(query.message, "⚠️ Tidak dapat menemukan foto. Silakan kirim ulang foto chart.")
 
         except Exception as e:
             logger.exception("Error in retry handler")
