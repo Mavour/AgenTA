@@ -283,7 +283,17 @@ async def journal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def weekly_report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
-    await update.message.reply_text(format_weekly_report(user_id), parse_mode="Markdown")
+    
+    report = format_weekly_report(user_id)
+    
+    schedule_msg = """
+━━━━━━━━━━━━━━━━━━━━
+⏰ *Jadwal Weekly Report*
+📅 Setiap Minggu, Jam 08:00 WITA
+
+Gunakan `/report` untuk melihat kapan saja."""
+    
+    await update.message.reply_text(report + schedule_msg, parse_mode="Markdown")
 
 
 async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
