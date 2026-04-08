@@ -9,6 +9,10 @@ from handlers import (
     show_menu,
     help_command,
     rr_command,
+    journal_command,
+    weekly_report_command,
+    news_command,
+    prices_command,
     handle_photo,
     handle_text,
     button_handler,
@@ -30,6 +34,10 @@ async def run_bot():
     app.add_handler(CommandHandler("menu", show_menu))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("rr", rr_command))
+    app.add_handler(CommandHandler("journal", journal_command))
+    app.add_handler(CommandHandler("report", weekly_report_command))
+    app.add_handler(CommandHandler("news", news_command))
+    app.add_handler(CommandHandler("price", prices_command))
 
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
@@ -40,9 +48,13 @@ async def run_bot():
     await app.initialize()
     await app.bot.set_my_commands([
         BotCommand("start", "Mulai bot"),
-        BotCommand("menu", "Tampilkan menu utama"),
+        BotCommand("menu", "Menu utama"),
         BotCommand("help", "Panduan lengkap"),
-        BotCommand("rr", "Hitung Risk:Reward ratio"),
+        BotCommand("rr", "Hitung Risk:Reward"),
+        BotCommand("journal", "Riwayat analisis"),
+        BotCommand("report", "Weekly report"),
+        BotCommand("news", "Crypto news"),
+        BotCommand("price", "Harga crypto"),
     ])
     await app.start()
     await app.updater.start_polling(allowed_updates=Update.ALL_TYPES)

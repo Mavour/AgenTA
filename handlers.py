@@ -11,6 +11,8 @@ from utils import (
     format_welcome,
     format_help,
 )
+from data.journal import save_analysis, format_journal_list, format_weekly_report
+from services.news_service import fetch_crypto_news, format_news_response, get_crypto_prices
 
 logger = logging.getLogger(__name__)
 
@@ -117,8 +119,12 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         analysis = await analyze_chart(image_bytes, caption)
 
+        pair = caption.split()[0] if caption else "Unknown"
+        signal = "bullish" if "bullish" in analysis.lower() else "bearish" if "bearish" in analysis.lower() else None
+        save_analysis(user_id, analysis, pair=pair, timeframe="Unknown", signal=signal)
+
         keyboard = [
-            [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis")]
+            [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -227,7 +233,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 analysis = await analyze_chart(image_bytes, caption)
 
                 keyboard = [
-                    [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis")]
+                    [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
                 ]
                 reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -241,3 +247,74 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await _edit_text_msg(query.message, format_error_message("Terjadi kesalahan saat analisis ulang."))
             except Exception:
                 pass
+
+    elif query.data == "export_pdf":
+        await query.answer("Membuat PDF...", show_alert=True)
+        
+        user_id = query.from_user.id
+        
+        try:
+            if user_id in photo_cache:
+                image_bytes, caption = photo_cache[user_id]
+                
+                from data.export_pdf import generate_pdf_file
+                pair = caption.split()[0] if caption else "Unknown"
+                filename = generate_pdf_file("Analisis dari chart yang dikirim user", pair=pair)
+                
+                await query.message.reply_document(document=open(filename, "rb"))
+                
+                import os
+                os.remove(filename)
+            else:
+                await query.message.reply_text("⚠️ Data tidak ditemukan. Silakan kirim ulang chart.")
+        except Exception as e:
+            logger.exception("Error generating PDF")
+            await query.message.reply_text("⚠️ Gagal membuat PDF.")
+
+
+async def journal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    pair_filter = None
+    
+    if context.args:
+        if context.args[0] == "clear":
+            from data.database import clear_user_journal
+            clear_user_journal(user_id)
+            await update.message.reply_text("🗑️ Journal berhasil dihapus.", parse_mode="Markdown")
+            return
+        pair_filter = context.args[0]
+    
+    from data.database import get_user_journal
+    results = get_user_journal(user_id, limit=10, pair_filter=pair_filter)
+    await update.message.reply_text(format_journal_list(results), parse_mode="Markdown")
+
+
+async def weekly_report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    await update.message.reply_text(format_weekly_report(user_id), parse_mode="Markdown")
+
+
+async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.chat.send_action(action="typing")
+    
+    pair = context.args[0].upper() if context.args else None
+    
+    status_msg = await update.message.reply_text("📰 *Mengambil berita...*", parse_mode="Markdown")
+    
+    news_list = fetch_crypto_news(limit=15)
+    response = format_news_response(news_list, pair)
+    
+    await status_msg.edit_text(response, parse_mode="Markdown")
+
+
+async def prices_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.chat.send_action(action="typing")
+    
+    status_msg = await update.message.reply_text("💰 *Mengambil harga...*", parse_mode="Markdown")
+    
+    prices = get_crypto_prices()
+    
+    if prices:
+        await status_msg.edit_text(prices, parse_mode="Markdown")
+    else:
+        await status_msg.edit_text("⚠️ Gagal mengambil harga. Coba lagi nanti.", parse_mode="Markdown")
