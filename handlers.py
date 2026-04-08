@@ -19,7 +19,9 @@ logger = logging.getLogger(__name__)
 MENU_KEYBOARD = ReplyKeyboardMarkup(
     [
         [KeyboardButton("📊 Analisis Chart"), KeyboardButton("💬 Tanya Jawab")],
-        [KeyboardButton("📐 Hitung R:R"), KeyboardButton("📖 Panduan")],
+        [KeyboardButton("📐 Hitung R:R"), KeyboardButton("📔 Journal")],
+        [KeyboardButton("📰 News"), KeyboardButton("💰 Harga")],
+        [KeyboardButton("📊 Report"), KeyboardButton("📖 Panduan")],
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
@@ -173,6 +175,31 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if text == "📖 Panduan":
         await help_command(update, context)
+        return
+
+    if text == "📔 Journal":
+        from data.database import get_user_journal
+        results = get_user_journal(update.message.from_user.id, limit=10)
+        await update.message.reply_text(format_journal_list(results), parse_mode="Markdown")
+        return
+
+    if text == "📰 News":
+        status_msg = await update.message.reply_text("📰 *Mengambil berita...*", parse_mode="Markdown")
+        news_list = fetch_crypto_news(limit=10)
+        await status_msg.edit_text(format_news_response(news_list), parse_mode="Markdown")
+        return
+
+    if text == "💰 Harga":
+        status_msg = await update.message.reply_text("💰 *Mengambil harga...*", parse_mode="Markdown")
+        prices = get_crypto_prices()
+        if prices:
+            await status_msg.edit_text(prices, parse_mode="Markdown")
+        else:
+            await status_msg.edit_text("⚠️ Gagal mengambil harga.", parse_mode="Markdown")
+        return
+
+    if text == "📊 Report":
+        await update.message.reply_text(format_weekly_report(update.message.from_user.id), parse_mode="Markdown")
         return
 
     await update.message.chat.send_action(action="typing")
