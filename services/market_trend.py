@@ -123,13 +123,28 @@ def format_market_prediction(prediction: Dict) -> str:
         top_l = price.get("top_losers", [])
         top_g_str = ", ".join([f"{c} (+)" for c in top_g[:3]]) if top_g else "-"
         top_l_str = ", ".join([f"{c} (-)" for c in top_l[:3]]) if top_l else "-"
-        lines.append(f"\n📊 *Dari Harga (Top 20, CoinGecko):*")
-        lines.append(f"  📈 Gainers: {gainers} ({top_g_str})")
-        lines.append(f"  📉 Losers: {losers} ({top_l_str})")
+        lines.append(f"\n📊 *Market Data (Top 20, CoinGecko):*")
+        lines.append(f"  📈 Gainers: {gainers} | 📉 Losers: {losers}")
+        lines.append(f"  🔼 Top: {top_g_str}")
+        lines.append(f"  🔽 Bottom: {top_l_str}")
         if losers > gainers:
-            lines.append(f"  ⚠️ Tren: *BEARISH* - Dominan losers")
+            lines.append(f"  ⚠️ Tren: *BEARISH* - {losers-gainers} more losers")
         elif gainers > losers:
-            lines.append(f"  ✅ Tren: *BULLISH* - Dominan gainers")
+            lines.append(f"  ✅ Tren: *BULLISH* - {gainers-losers} more gainers")
+    
+    try:
+        from services.news_fetcher import fetch_all_news
+        all_news = fetch_all_news(limit=3)
+        news_items = []
+        for src, items in all_news.items():
+            news_items.extend(items[:2])
+        if news_items:
+            lines.append(f"\n📰 *Latest:*")
+            for i, item in enumerate(news_items[:4]):
+                title = item.get("title", "")[:50]
+                lines.append(f"  {i+1}. {title}...")
+    except:
+        pass
     
     if combined:
         sentiment_emoji = "🟢" if combined["sentiment"] == "bullish" else "🔴" if combined["sentiment"] == "bearish" else "⚪"
