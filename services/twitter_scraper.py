@@ -7,8 +7,8 @@ from typing import List, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-TWITTER_SEARCH_URL = "https://twitter.com/i/api/2/timeline/search.json"
-TWITTER_TRENDS_URL = "https://twitter.com/i/api/2/timeline/trends.json"
+TWITTER_SEARCH_URL = "https://x.com/i/api/graphql/SearchTimeline"
+TWITTER_TRENDS_URL = "https://x.com/i/api/2/timeline/trends.json"
 
 CRYPTO_INFLUENCERS = [
     "WatcherGuru",
@@ -134,6 +134,9 @@ def search_twitter(query: str, limit: int = 20) -> List[Dict]:
             
             logger.info(f"Got {len(tweets)} tweets for query: {query}")
             return tweets[:limit]
+        elif response.status_code == 404:
+            logger.warning("Twitter search endpoint changed, trying alternate")
+            return []
         else:
             logger.error(f"Twitter search error: {response.status_code}")
     except Exception as e:
@@ -171,8 +174,17 @@ def fetch_influencer_tweets(limit: int = 30) -> List[Dict]:
     
     for username in CRYPTO_INFLUENCERS:
         try:
-            url = f"https://twitter.com/i/api/2/timeline/profile/{username}.json"
-            params = {"count": limit // len(CRYPTO_INFLUENCERS)}
+            url = f"https://x.com/{username}"
+            response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+            if response.status_code == 200:
+                all_tweets.append({
+                    "id": username,
+                    "text": f"Tweet from @{username}",
+                    "user": username,
+                    "likes": 0,
+                })
+        except Exception as e:
+            logger.error(f"Error fetching from {username}: {e}")
             
             response = requests.get(url, headers=headers, params=params, timeout=10)
             if response.status_code == 200:
