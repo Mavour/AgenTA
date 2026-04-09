@@ -119,32 +119,49 @@ def format_market_prediction(prediction: Dict) -> str:
     if price and price.get("total", 0) > 0:
         gainers = price.get("gainers", 0)
         losers = price.get("losers", 0)
-        top_g = price.get("top_gainers", [])
-        top_l = price.get("top_losers", [])
-        top_g_str = ", ".join([f"{c} (+)" for c in top_g[:3]]) if top_g else "-"
-        top_l_str = ", ".join([f"{c} (-)" for c in top_l[:3]]) if top_l else "-"
-        lines.append(f"\n📊 *Market Data (Top 20, CoinGecko):*")
-        lines.append(f"  📈 Gainers: {gainers} | 📉 Losers: {losers}")
-        lines.append(f"  🔼 Top: {top_g_str}")
-        lines.append(f"  🔽 Bottom: {top_l_str}")
         if losers > gainers:
-            lines.append(f"  ⚠️ Tren: *BEARISH* - {losers-gainers} more losers")
+            lines.append(f"📉 Market: {losers} coin turun vs {gainers} naik")
         elif gainers > losers:
-            lines.append(f"  ✅ Tren: *BULLISH* - {gainers-losers} more gainers")
+            lines.append(f"📈 Market: {gainers} coin naik vs {losers} turun")
     
     try:
-        from services.news_fetcher import fetch_all_news, get_news_with_context
+        from services.news_fetcher import fetch_coingecko_news, get_news_with_context
+        
+        prices = fetch_coingecko_news(5)
+        btc_eth = {}
+        for p in prices:
+            title = p.get("title", "")
+            change = p.get("change_24h", 0)
+            if "BTC" in title:
+                btc_eth["BTC"] = change
+            elif "ETH" in title:
+                btc_eth["ETH"] = change
+        
         ctx = get_news_with_context()
-        if ctx.get("rss"):
-            rss_items = ctx["rss"][:5]
-            if rss_items:
-                lines.append(f"\n📰 *Latest News:*")
-                for item in rss_items:
-                    title = item.get("title", "")[:60]
-                    src = item.get("source", "")
-                    lines.append(f"  📌 {title}")
-        elif ctx.get("mock"):
-            lines.append(f"\n📰 *Latest:* (RSS unavailable)")
+        news_items = ctx.get("rss", [])[:3]
+        
+        if btc_eth:
+            btc = btc_eth.get("BTC", 0)
+            eth = btc_eth.get("ETH", 0)
+            btc_str = f"{btc:+.2f}%" if btc else "N/A"
+            eth_str = f"{eth:+.2f}%" if eth else "N/A"
+            sentiment = "bearish" if btc and btc < -1 else "bullish" if btc and btc > 1 else "netral"
+            
+            if sentiment == "bearish":
+                lines.append(f"\n📉 BTC: {btc_str} | ETH: {eth_str}")
+                lines.append("⚠️ BTC turun >1% - tekanan jual")
+            elif sentiment == "bullish":
+                lines.append(f"\n📈 BTC: {btc_str} | ETH: {eth_str}")
+                lines.append("✅ BTC naik - momentum positif")
+            else:
+                lines.append(f"\n💰 BTC: {btc_str} | ETH: {eth_str}")
+                lines.append("➡️ BTC netral - tunggu sinyal")
+        
+        if news_items:
+            lines.append(f"\n📰 *Latest:*")
+            for item in news_items:
+                title = item.get("title", "")[:55]
+                lines.append(f"  • {title}")
     except Exception as e:
         logger.error(f"News error: {e}")
     
