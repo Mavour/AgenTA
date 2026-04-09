@@ -41,7 +41,9 @@ def load_cookies() -> Optional[Dict]:
                         return None
                 
                 logger.info("Twitter cookie loaded successfully")
-                return data.get("cookies", {})
+                if data.get("cookies"):
+                    return data["cookies"]
+                return {"auth_token": data.get("auth_token"), "ct0": data.get("ct0")}
     except Exception as e:
         logger.error(f"Error loading Twitter cookie: {e}")
     return None

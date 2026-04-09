@@ -34,6 +34,49 @@ def analyze_text_sentiment(text: str) -> str:
     return "neutral"
 
 
+def analyze_price_sentiment(price_data: List[Dict]) -> Dict:
+    """Analyze sentiment from price change data (from CoinGecko)"""
+    if not price_data:
+        return {"sentiment": "neutral", "bullish": 0, "bearish": 0, "neutral": 0, "total": 0}
+    
+    bullish = 0
+    bearish = 0
+    neutral = 0
+    
+    for item in price_data:
+        change = item.get("change_24h", 0)
+        if change is None:
+            change = 0
+        if change > 1:
+            bullish += 1
+        elif change < -1:
+            bearish += 1
+        else:
+            neutral += 1
+    
+    total = bullish + bearish + neutral
+    if total == 0:
+        return {"sentiment": "neutral", "bullish": 0, "bearish": 0, "neutral": 0, "total": 0}
+    
+    if bullish > bearish:
+        sentiment = "bullish"
+    elif bearish > bullish:
+        sentiment = "bearish"
+    else:
+        sentiment = "neutral"
+    
+    return {
+        "sentiment": sentiment,
+        "bullish": bullish,
+        "bearish": bearish,
+        "neutral": neutral,
+        "total": total,
+        "bullish_pct": round((bullish / total) * 100, 1),
+        "bearish_pct": round((bearish / total) * 100, 1),
+        "neutral_pct": round((neutral / total) * 100, 1)
+    }
+
+
 def analyze_news_sentiment(news_list: List[Dict]) -> Dict:
     if not news_list:
         return {"sentiment": "neutral", "bullish": 0, "bearish": 0, "neutral": 0, "total": 0}

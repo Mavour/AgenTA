@@ -3,6 +3,7 @@ from typing import Dict, Optional, List
 from services.news_fetcher import fetch_all_news, get_market_overview, get_market_sentiment_from_prices
 from services.sentiment_analyzer import (
     analyze_news_sentiment, 
+    analyze_price_sentiment,
     analyze_twitter_sentiment, 
     combine_sentiments,
     format_sentiment_summary
@@ -71,7 +72,10 @@ def get_market_prediction(chart_analysis: str = None, pair: str = "BTC") -> Dict
         for source, items in all_news.items():
             news_list.extend(items)
         
-        news_sentiment = analyze_news_sentiment(news_list)
+        if news_list and any("change_24h" in item for item in news_list):
+            news_sentiment = analyze_price_sentiment(news_list)
+        else:
+            news_sentiment = analyze_news_sentiment(news_list)
         result["news"] = news_sentiment
         
         price_sentiment = get_market_sentiment_from_prices()
