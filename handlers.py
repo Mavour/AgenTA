@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 TREND_TRIGGER_PATTERNS = [
     "naik", "turun", "bull", "bear", "market", "trend", "prediction",
     "akan naik", "akan turun", "kemungkinan", "kesimpulan", "prediksi",
-    "arah market", "arah harga", "kesempatan buy", "kesempatan sell"
+    "arah market", "arah harga", "kesempatan buy", "kesempatan sell",
+    "bullish", "bearish", "sentiment", "bagaimana pasar", "kondisi pasar",
+    "mau naik", "mau turun", "sekarang", "ini bullish", "ini bearish"
 ]
 
 MENU_KEYBOARD = ReplyKeyboardMarkup(

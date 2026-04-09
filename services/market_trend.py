@@ -133,18 +133,20 @@ def format_market_prediction(prediction: Dict) -> str:
             lines.append(f"  ✅ Tren: *BULLISH* - {gainers-losers} more gainers")
     
     try:
-        from services.news_fetcher import fetch_all_news
-        all_news = fetch_all_news(limit=3)
-        news_items = []
-        for src, items in all_news.items():
-            news_items.extend(items[:2])
-        if news_items:
-            lines.append(f"\n📰 *Latest:*")
-            for i, item in enumerate(news_items[:4]):
-                title = item.get("title", "")[:50]
-                lines.append(f"  {i+1}. {title}...")
-    except:
-        pass
+        from services.news_fetcher import fetch_all_news, get_news_with_context
+        ctx = get_news_with_context()
+        if ctx.get("rss"):
+            rss_items = ctx["rss"][:5]
+            if rss_items:
+                lines.append(f"\n📰 *Latest News:*")
+                for item in rss_items:
+                    title = item.get("title", "")[:60]
+                    src = item.get("source", "")
+                    lines.append(f"  📌 {title}")
+        elif ctx.get("mock"):
+            lines.append(f"\n📰 *Latest:* (RSS unavailable)")
+    except Exception as e:
+        logger.error(f"News error: {e}")
     
     if combined:
         sentiment_emoji = "🟢" if combined["sentiment"] == "bullish" else "🔴" if combined["sentiment"] == "bearish" else "⚪"

@@ -6,17 +6,62 @@ from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
+RSS_FEEDS = {
+    "cointelegraph": "https://cointelegraph.com/rss",
+    "coindesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+    "cointelegraph_markets": "https://cointelegraph.com/rss/tag/markets",
+    "cointelegraph_bitcoin": "https://cointelegraph.com/rss/tag/bitcoin",
+    "cointelegraph_ethereum": "https://cointelegraph.com/rss/tag/ethereum",
+}
+
+MOCK_NEWS = []
+CRYPTO_NEWS_SOURCES = {
+    "cryptocompare": "https://min-api.cryptocompare.com/data/v2/news/?lang=EN",
+    "coingecko": "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false&price_change_percentage=24h",
+}
+
+
+def fetch_rss_news(limit: int = 10) -> List[Dict]:
+    news_list = []
+    for feed_name, feed_url in RSS_FEEDS.items():
+        try:
+            response = requests.get(feed_url, timeout=10, headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            })
+            if response.status_code == 200:
+                feed = feedparser.parse(response.text)
+                for entry in feed.entries[:limit // len(RSS_FEEDS)]:
+                    news_list.append({
+                        "title": entry.get("title", ""),
+                        "source": feed_name.replace("cointelegraph_", "").title(),
+                        "url": entry.get("link", ""),
+                        "published": entry.get("published", "")
+                    })
+        except Exception as e:
+            logger.error(f"RSS feed error {feed_name}: {e}")
+    return news_list[:limit]
+
+
+def get_news_with_context() -> Dict:
+    rss_news = fetch_rss_news(limit=15)
+    if rss_news:
+        return {"rss": rss_news}
+    
+    logger.warning("All news sources failed, using mock data")
+    return {"mock": []}
+
+
 MOCK_NEWS = [
-    {"title": "Bitcoin surges past $71K as institutional investors increase positions", "source": "CoinDesk", "url": "https://coindesk.com"},
-    {"title": "Ethereum ETF inflows hit new weekly record", "source": "Bloomberg", "url": "https://bloomberg.com"},
-    {"title": "Crypto market cap reaches $2.4 trillion", "source": "CoinMarketCap", "url": "https://coinmarketcap.com"},
-    {"title": "Bitcoin whale moves 10,000 BTC to cold wallet", "source": "Decrypt", "url": "https://decrypt.co"},
-    {"title": "DeFi total value locked surpasses $100 billion", "source": "DeFi Pulse", "url": "https://defipulse.com"},
-    {"title": "SEC delays decision on Ethereum ETF options", "source": "Reuters", "url": "https://reuters.com"},
-    {"title": "Bitcoin mining difficulty reaches new all-time high", "source": "BTC.com", "url": "https://btc.com"},
-    {"title": "Solana network sees record transaction volume", "source": "Solana Foundation", "url": "https://solana.com"},
-    {"title": "Regulatory concerns weigh on crypto market sentiment", "source": "Financial Times", "url": "https://ft.com"},
-    {"title": "Crypto exchange listings surge in Q2", "source": "The Block", "url": "https://theblock.co"},
+    {"title": "Bitcoin surges past $71K as institutional investors increase positions", "source": "CoinDesk"},
+    {"title": "Ethereum ETF inflows hit new weekly record", "source": "Bloomberg"},
+    {"title": "Crypto market cap reaches $2.4 trillion", "source": "CoinMarketCap"},
+    {"title": "Bitcoin whale moves 10,000 BTC to cold wallet", "source": "Decrypt"},
+    {"title": "DeFi total value locked surpasses $100 billion", "source": "DeFi Pulse"},
+    {"title": "SEC delays decision on Ethereum ETF options", "source": "Reuters"},
+    {"title": "Bitcoin mining difficulty reaches new all-time high", "source": "BTC.com"},
+    {"title": "Solana network sees record transaction volume", "source": "Solana Foundation"},
+    {"title": "Regulatory concerns weigh on crypto market sentiment", "source": "Financial Times"},
+    {"title": "Crypto exchange listings surge in Q2", "source": "The Block"},
 ]
 
 CRYPTO_NEWS_SOURCES = {
@@ -239,11 +284,16 @@ def get_market_sentiment_from_prices() -> Dict:
 
 
 def fetch_all_news(limit: int = 10) -> Dict[str, List[Dict]]:
+    rss_news = get_news_with_context()
+    
+    if rss_news.get("rss"):
+        return rss_news
+    
     cg_news = fetch_coingecko_news(limit)
     
     if not cg_news:
-        logger.warning("CoinGecko API failed, using mock data")
-        return {"mock": MOCK_NEWS[:limit]}
+        logger.warning("All news APIs failed, using fallback")
+        return {"mock": []}
     
     all_news = {
         "coingecko": cg_news
@@ -253,7 +303,9 @@ def fetch_all_news(limit: int = 10) -> Dict[str, List[Dict]]:
     logger.info(f"Total news fetched: {total}")
     
     if total == 0:
-        return {"mock": MOCK_NEWS[:limit]}
+        return {"mock": []}
+    
+    return all_news
     
     return all_news
 
