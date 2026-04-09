@@ -103,12 +103,16 @@ def get_market_prediction(chart_analysis: str = None, pair: str = "BTC") -> Dict
     return result
 
 
-def format_market_prediction(prediction: Dict) -> str:
+def format_market_prediction(prediction: Dict, pair: str = "BTC") -> str:
     combined = prediction.get("combined", {})
     chart = prediction.get("chart")
     price = prediction.get("price", {})
     news = prediction.get("news")
     twitter = prediction.get("twitter")
+    
+    COIN_MAP = {"SOLANA": "SOL", "ETHEREUM": "ETH", "BITCOIN": "BTC", "RIPPLE": "XRP", "CARDANO": "ADA", "BINANCE": "BNB", "DOGECOIN": "DOGE"}
+    coin_raw = pair.upper() if pair else "BTC"
+    coin = COIN_MAP.get(coin_raw, coin_raw)
     
     lines = ["🎯 *Market Prediction*\n"]
     
@@ -127,38 +131,28 @@ def format_market_prediction(prediction: Dict) -> str:
     try:
         from services.news_fetcher import fetch_coingecko_news, get_news_with_context
         
-        pair = "BTC"
-        prices = fetch_coingecko_news(5)
-        btc_eth = {}
+        prices = fetch_coingecko_news(15)
+        coin_change = {}
         for p in prices:
             title = p.get("title", "")
-            change = p.get("change_24h", 0)
-            if "BTC" in title:
-                btc_eth["BTC"] = change
-                pair = "BTC"
-            elif "ETH" in title:
-                btc_eth["ETH"] = change
-                pair = "ETH"
+            chg = p.get("change_24h", 0)
+            for c in ["BTC", "ETH", "SOL", "XRP", "ADA", "BNB", "DOGE"]:
+                if c in title:
+                    coin_change[c] = chg
         
-        ctx = get_news_with_context(coin=pair)
+        coin_price = coin_change.get(coin, 0)
+        
+        ctx = get_news_with_context(coin=coin)
         news_items = ctx.get("rss", [])[:3]
         
-        if btc_eth:
-            btc = btc_eth.get("BTC", 0)
-            eth = btc_eth.get("ETH", 0)
-            btc_str = f"{btc:+.2f}%" if btc else "N/A"
-            eth_str = f"{eth:+.2f}%" if eth else "N/A"
-            sentiment = "bearish" if btc and btc < -1 else "bullish" if btc and btc > 1 else "netral"
-            
-            if sentiment == "bearish":
-                lines.append(f"\n📉 BTC: {btc_str} | ETH: {eth_str}")
-                lines.append("⚠️ BTC turun >1% - tekanan jual")
-            elif sentiment == "bullish":
-                lines.append(f"\n📈 BTC: {btc_str} | ETH: {eth_str}")
-                lines.append("✅ BTC naik - momentum positif")
+        if coin_price:
+            pct = f"{coin_price:+.2f}%"
+            if coin_price < -1:
+                lines.append(f"\n📉 {coin}: {pct} - tekanan jual")
+            elif coin_price > 1:
+                lines.append(f"\n📈 {coin}: {pct} - momentum positif")
             else:
-                lines.append(f"\n💰 BTC: {btc_str} | ETH: {eth_str}")
-                lines.append("➡️ BTC netral - tunggu sinyal")
+                lines.append(f"\n💰 {coin}: {pct} - netral")
         
         if news_items:
             lines.append(f"\n📰 *Latest:*")

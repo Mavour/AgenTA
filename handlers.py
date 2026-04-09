@@ -201,7 +201,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 pair = caption.split()[0] if caption else "BTC"
             
             prediction = get_market_prediction(chart_context, pair)
-            prediction_text = format_market_prediction(prediction)
+            prediction_text = format_market_prediction(prediction, pair=pair)
             
             last_analysis_cache[user_id] = "trend"
             await status_msg.edit_text(prediction_text, parse_mode="Markdown")
