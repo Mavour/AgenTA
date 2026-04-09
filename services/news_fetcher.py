@@ -6,10 +6,22 @@ from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
+MOCK_NEWS = [
+    {"title": "Bitcoin surges past $71K as institutional investors increase positions", "source": "CoinDesk", "url": "https://coindesk.com"},
+    {"title": "Ethereum ETF inflows hit new weekly record", "source": "Bloomberg", "url": "https://bloomberg.com"},
+    {"title": "Crypto market cap reaches $2.4 trillion", "source": "CoinMarketCap", "url": "https://coinmarketcap.com"},
+    {"title": "Bitcoin whale moves 10,000 BTC to cold wallet", "source": "Decrypt", "url": "https://decrypt.co"},
+    {"title": "DeFi total value locked surpasses $100 billion", "source": "DeFi Pulse", "url": "https://defipulse.com"},
+    {"title": "SEC delays decision on Ethereum ETF options", "source": "Reuters", "url": "https://reuters.com"},
+    {"title": "Bitcoin mining difficulty reaches new all-time high", "source": "BTC.com", "url": "https://btc.com"},
+    {"title": "Solana network sees record transaction volume", "source": "Solana Foundation", "url": "https://solana.com"},
+    {"title": "Regulatory concerns weigh on crypto market sentiment", "source": "Financial Times", "url": "https://ft.com"},
+    {"title": "Crypto exchange listings surge in Q2", "source": "The Block", "url": "https://theblock.co"},
+]
+
 CRYPTO_NEWS_SOURCES = {
     "cryptocompare": "https://min-api.cryptocompare.com/data/v2/news/?lang=EN",
     "coingecko": "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false&price_change_percentage=24h",
-    "financialjuice": "https://www.financialjuice.com/feed/"
 }
 
 
@@ -211,14 +223,21 @@ def get_market_sentiment_from_prices() -> Dict:
 
 
 def fetch_all_news(limit: int = 10) -> Dict[str, List[Dict]]:
+    cg_news = fetch_coingecko_news(limit)
+    
+    if not cg_news:
+        logger.warning("CoinGecko API failed, using mock data")
+        return {"mock": MOCK_NEWS[:limit]}
+    
     all_news = {
-        "cryptocompare": fetch_cryptocompare_news(limit),
-        "financialjuice": fetch_financialjuice_news(limit),
-        "coingecko": fetch_coingecko_news(limit)
+        "coingecko": cg_news
     }
     
     total = sum(len(v) for v in all_news.values())
     logger.info(f"Total news fetched: {total}")
+    
+    if total == 0:
+        return {"mock": MOCK_NEWS[:limit]}
     
     return all_news
 

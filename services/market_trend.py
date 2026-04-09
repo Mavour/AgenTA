@@ -7,7 +7,7 @@ from services.sentiment_analyzer import (
     combine_sentiments,
     format_sentiment_summary
 )
-from services.twitter_scraper import fetch_crypto_tweets, check_cookie_status
+from services.twitter_scraper import fetch_crypto_tweets, fetch_influencer_tweets, check_cookie_status
 
 logger = logging.getLogger(__name__)
 
@@ -78,11 +78,18 @@ def get_market_prediction(chart_analysis: str = None, pair: str = "BTC") -> Dict
         result["price"] = price_sentiment
         
         twitter_sentiment = None
-        if check_cookie_status().get("status") == "active":
-            tweets = fetch_crypto_tweets([pair, "Bitcoin", "Ethereum"], limit=20)
-            if tweets:
-                twitter_sentiment = analyze_twitter_sentiment(tweets)
+        cookie_status = check_cookie_status()
+        
+        if cookie_status.get("status") == "active":
+            influencer_tweets = fetch_influencer_tweets(limit=30)
+            if influencer_tweets:
+                twitter_sentiment = analyze_twitter_sentiment(influencer_tweets)
                 result["twitter"] = twitter_sentiment
+            else:
+                tweets = fetch_crypto_tweets([pair, "Bitcoin", "Ethereum"], limit=20)
+                if tweets:
+                    twitter_sentiment = analyze_twitter_sentiment(tweets)
+                    result["twitter"] = twitter_sentiment
         
         result["combined"] = combine_sentiments(news_sentiment, twitter_sentiment, price_sentiment)
         

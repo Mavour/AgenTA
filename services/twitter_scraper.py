@@ -10,6 +10,21 @@ logger = logging.getLogger(__name__)
 TWITTER_SEARCH_URL = "https://twitter.com/i/api/2/timeline/search.json"
 TWITTER_TRENDS_URL = "https://twitter.com/i/api/2/timeline/trends.json"
 
+CRYPTO_INFLUENCERS = [
+    "WatcherGuru",
+    "whale_alert",
+    "DombaEth27",
+    "KalshiTrade",
+    "hoteliercrypto",
+    "lookonchain",
+    "nansen_ai",
+    "polyburg",
+    "sarjana_crypto",
+    "MARKOCHAIN_",
+    "OnchainLens",
+    "AshCrypto"
+]
+
 COOKIE_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "twitter_cookie.json")
 
 
@@ -141,6 +156,37 @@ def fetch_crypto_tweets(coins: List[str] = None, limit: int = 20) -> List[Dict]:
     
     unique_tweets = {t["id"]: t for t in all_tweets}.values()
     return list(unique_tweets)[:limit]
+
+
+def fetch_influencer_tweets(limit: int = 30) -> List[Dict]:
+    cookies = load_cookies()
+    if not cookies:
+        logger.warning("No Twitter cookie available")
+        return []
+    
+    all_tweets = []
+    headers = get_twitter_headers(cookies)
+    
+    for username in CRYPTO_INFLUENCERS:
+        try:
+            url = f"https://twitter.com/i/api/2/timeline/profile/{username}.json"
+            params = {"count": limit // len(CRYPTO_INFLUENCERS)}
+            
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                for item in data.get("globalObjects", {}).get("tweets", {}).values():
+                    all_tweets.append({
+                        "id": item.get("id_str"),
+                        "text": item.get("full_text", ""),
+                        "created_at": item.get("created_at"),
+                        "user": username,
+                        "likes": item.get("favorite_count", 0),
+                    })
+        except Exception as e:
+            logger.error(f"Error fetching tweets from {username}: {e}")
+    
+    return all_tweets[:limit]
 
 
 def get_twitter_sentiment_for_crypto(coin: str = "BTC") -> Dict:
