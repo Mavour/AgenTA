@@ -110,9 +110,7 @@ def format_market_prediction(prediction: Dict, pair: str = "BTC") -> str:
     news = prediction.get("news")
     twitter = prediction.get("twitter")
     
-    COIN_MAP = {"SOLANA": "SOL", "ETHEREUM": "ETH", "BITCOIN": "BTC", "RIPPLE": "XRP", "CARDANO": "ADA", "BINANCE": "BNB", "DOGECOIN": "DOGE"}
-    coin_raw = pair.upper() if pair else "BTC"
-    coin = COIN_MAP.get(coin_raw, coin_raw)
+    coin = pair.upper() if pair else "BTC"
     
     lines = ["🎯 *Market Prediction*\n"]
     
@@ -121,29 +119,35 @@ def format_market_prediction(prediction: Dict, pair: str = "BTC") -> str:
         lines.append(f"📈 *Dari Chart:* {trend_emoji} {chart['trend'].title()} (Kekuatan: {chart['strength']}/10)")
     
     if price and price.get("total", 0) > 0:
-        gainers = price.get("gainers", 0)
-        losers = price.get("losers", 0)
-        if losers > gainers:
-            lines.append(f"📉 Market: {losers} coin turun vs {gainers} naik")
-        elif gainers > losers:
-            lines.append(f"📈 Market: {gainers} coin naik vs {losers} turun")
+        g = price.get("gainers", 0)
+        l = price.get("losers", 0)
+        if l > g:
+            lines.append(f"📉 Market: {l} turun vs {g} naik")
+        elif g > l:
+            lines.append(f"📈 Market: {g} naik vs {l} turun")
     
     try:
         from services.news_fetcher import fetch_coingecko_news, get_news_with_context
         
-        prices = fetch_coingecko_news(15)
+        prices = fetch_coingecko_news(20)
         coin_change = {}
         for p in prices:
             title = p.get("title", "")
             chg = p.get("change_24h", 0)
-            for c in ["BTC", "ETH", "SOL", "XRP", "ADA", "BNB", "DOGE"]:
-                if c in title:
+            for c in title.split():
+                if c.isupper() and len(c) >= 2 and c not in ["USD", "ETH", "BTC"]:
                     coin_change[c] = chg
         
         coin_price = coin_change.get(coin, 0)
         
         ctx = get_news_with_context(coin=coin)
-        news_items = ctx.get("rss", [])[:3]
+        news_items = ctx.get("rss", [])[:5]
+        
+        if not news_items:
+            news_items = ctx.get("mock", [])[:3]
+        
+        if not coin_price and not news_items:
+            lines.append(f"\n⚠️ {coin}: Data tidak tersedia")
         
         if coin_price:
             pct = f"{coin_price:+.2f}%"
