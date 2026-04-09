@@ -112,12 +112,16 @@ def format_market_prediction(prediction: Dict, pair: str = "BTC") -> str:
     
     coin = pair.upper() if pair else "BTC"
     
-    lines = ["🎯 *Market Prediction*\n"]
+    lines = []
+    
+    has_data = False
     
     if chart:
         trend = chart.get("trend", "netral").lower()
         trend_emoji = "🟢" if trend == "bullish" else "🔴" if trend == "bearish" else "⚪"
-        lines.append(f"📈 {coin}: {trend_emoji} {trend.title()} (Kekuatan: {chart.get('strength', 5)}/10)")
+        strength = chart.get("strength", 5)
+        lines.append(f"📊 *{coin}:* {trend_emoji} {trend.upper()} ({strength}/10)")
+        has_data = True
     
     try:
         from services.news_fetcher import fetch_coingecko_news, get_news_with_context
@@ -125,13 +129,18 @@ def format_market_prediction(prediction: Dict, pair: str = "BTC") -> str:
         prices = fetch_coingecko_news(20)
         coin_change = {}
         for p in prices:
+            change24h = p.get("change_24h", 0)
+            price = p.get("price", 0)
             title = p.get("title", "")
-            chg = p.get("change_24h", 0)
-            for c in title.split():
-                if c.isupper() and len(c) >= 2 and c not in ["USD", "ETH", "BTC"]:
-                    coin_change[c] = chg
+            if "BTC" in title.upper() or price and 65000 < price < 72000:
+                coin_change["BTC"] = change24h
+            elif "ETH" in title.upper() or price and 2000 < price < 2500:
+                coin_change["ETH"] = change24h
         
         coin_price = coin_change.get(coin, 0)
+        
+        if coin_price:
+            has_data = True
         
         ctx = get_news_with_context(coin=coin)
         news_items = ctx.get("rss", [])[:5]
@@ -165,16 +174,16 @@ def format_market_prediction(prediction: Dict, pair: str = "BTC") -> str:
     except Exception as e:
         logger.error(f"News error: {e}")
     
-    if combined and coin_price:
+    if has_data and coin_price:
         if coin_price < -1:
-            lines.append(f"\n📉 Outlook: Kondisi lemah, kemungkinan turun lagi")
+            lines.append(f"\n📉 Prediksi: TURUN - tekanan jual")
         elif coin_price > 1:
-            lines.append(f"\n📈 Outlook: Kondisi kuat, kemungkinan naik")
+            lines.append(f"\n📈 Prediksi: NAIK - momentum positif")
         else:
-            lines.append(f"\n➡️ Outlook: Konsolidasi, tunggu breakout")
+            lines.append(f"\n➡️ Prediksi: SIDEWAYS - tunggu sinyal")
     
-    if not chart and not price:
-        lines.append("\n⚠️ Data tidak tersedia. Kirim foto chart untuk analisis.")
+    if not has_data and not coin_price:
+        lines.append(f"\n⚠️ Kirim foto chart {coin} untuk analisis.")
     
     lines.append("\n_Disclaimer: Bukan financial advice._")
     
