@@ -172,7 +172,7 @@ def combine_sentiments(news_sentiment: Dict, twitter_sentiment: Dict = None, pri
         "news": news_sentiment,
         "price": price_sentiment,
         "twitter": twitter_sentiment,
-        "score": round(combined_score, 2)
+        "score": round(combined, 2)
     }
 
 
