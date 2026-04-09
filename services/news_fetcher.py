@@ -31,12 +31,14 @@ def fetch_rss_news(limit: int = 10) -> List[Dict]:
             if response.status_code == 200:
                 feed = feedparser.parse(response.text)
                 for entry in feed.entries[:limit // len(RSS_FEEDS)]:
-                    news_list.append({
-                        "title": entry.get("title", ""),
-                        "source": feed_name.replace("cointelegraph_", "").title(),
-                        "url": entry.get("link", ""),
-                        "published": entry.get("published", "")
-                    })
+                    title = entry.get("title", "")
+                    if title and len(title) > 20:
+                        news_list.append({
+                            "title": title,
+                            "source": feed_name.replace("cointelegraph_", "").title(),
+                            "url": entry.get("link", ""),
+                            "published": entry.get("published", "")
+                        })
         except Exception as e:
             logger.error(f"RSS feed error {feed_name}: {e}")
     return news_list[:limit]

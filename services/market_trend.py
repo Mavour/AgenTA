@@ -165,10 +165,15 @@ def format_market_prediction(prediction: Dict, pair: str = "BTC") -> str:
             if found_coin and found_coin in coin.upper():
                 lines.append(f"\n📰 *{found_coin} News:*")
             else:
-                lines.append(f"\n📰 *Latest:*")
+                lines.append(f"\n📰 *News:*")
             for item in news_items:
-                title = item.get("title", "")[:55]
-                lines.append(f"  • {title}")
+                title = item.get("title", "")[:50]
+                url = item.get("url", "")
+                if url and len(url) > 10:
+                    lines.append(f"  • {title}")
+                    lines.append(f"    🔗 {url[:60]}")
+                else:
+                    lines.append(f"  • {title}")
         elif coin_price:
             lines.append(f"\n📰 Tidak ada berita terbaru untuk {coin}")
     except Exception as e:
