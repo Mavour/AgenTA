@@ -91,10 +91,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         photo_cache[user_id] = (image_bytes, caption)
         last_analysis_cache[user_id] = "chart"
-        last_analysis_text_cache[user_id] = analysis
 
         analysis = await analyze_chart(image_bytes, caption)
-        
         last_analysis_text_cache[user_id] = analysis
 
         pair = caption.split()[0] if caption else "Unknown"
