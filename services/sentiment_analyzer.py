@@ -84,9 +84,10 @@ def analyze_twitter_sentiment(tweets: List[Dict]) -> Dict:
     }
 
 
-def combine_sentiments(news_sentiment: Dict, twitter_sentiment: Dict = None) -> Dict:
-    news_weight = 0.7
-    twitter_weight = 0.3
+def combine_sentiments(news_sentiment: Dict, twitter_sentiment: Dict = None, price_sentiment: Dict = None) -> Dict:
+    chart_weight = 0.5
+    price_weight = 0.3
+    twitter_weight = 0.2
     
     news_score = (
         (news_sentiment.get("bullish_pct", 0) / 100) * 1 +
@@ -94,15 +95,22 @@ def combine_sentiments(news_sentiment: Dict, twitter_sentiment: Dict = None) -> 
         (news_sentiment.get("bearish_pct", 0) / 100) * -1
     )
     
+    price_score = 0
+    if price_sentiment and price_sentiment.get("total", 0) > 0:
+        price_score = (
+            (price_sentiment.get("gainers_pct", 0) / 100) * 1 +
+            (price_sentiment.get("losers_pct", 0) / 100) * -1
+        )
+    
     if twitter_sentiment and twitter_sentiment.get("total", 0) > 0:
         twitter_score = (
             (twitter_sentiment.get("bullish_pct", 0) / 100) * 1 +
             (twitter_sentiment.get("neutral_pct", 0) / 100) * 0 +
             (twitter_sentiment.get("bearish_pct", 0) / 100) * -1
         )
-        combined_score = (news_score * news_weight) + (twitter_score * twitter_weight)
+        combined_score = (news_score * 0.5) + (price_score * 0.3) + (twitter_score * 0.2)
     else:
-        combined_score = news_score
+        combined_score = (news_score * 0.6) + (price_score * 0.4)
     
     if combined_score > 0.2:
         overall_sentiment = "bullish"
@@ -117,21 +125,28 @@ def combine_sentiments(news_sentiment: Dict, twitter_sentiment: Dict = None) -> 
         "sentiment": overall_sentiment,
         "confidence": round(confidence, 1),
         "news": news_sentiment,
+        "price": price_sentiment,
         "twitter": twitter_sentiment,
         "score": round(combined_score, 2)
     }
 
 
 def format_sentiment_summary(sentiment_data: Dict) -> str:
-    lines = ["📰 *Sentimen News:*"]
+    lines = []
     
     news = sentiment_data.get("news", {})
-    if news.get("total", 0) > 0:
+    if news and news.get("total", 0) > 0:
+        lines.append("📰 *Sentimen News:*")
         lines.append(f"  🟢 Bullish: {news.get('bullish_pct', 0)}%")
         lines.append(f"  🔴 Bearish: {news.get('bearish_pct', 0)}%")
         lines.append(f"  ⚪ Neutral: {news.get('neutral_pct', 0)}%")
-    else:
-        lines.append("  ⚠️ Tidak ada data")
+    
+    price = sentiment_data.get("price", {})
+    if price and price.get("total", 0) > 0:
+        lines.append("")
+        lines.append("📊 *Sentimen Harga (Top 20):*")
+        lines.append(f"  🟢 Gainers: {price.get('gainers', 0)} coin ({price.get('gainers_pct', 0)}%)")
+        lines.append(f"  🔴 Losers: {price.get('losers', 0)} coin ({price.get('losers_pct', 0)}%)")
     
     twitter = sentiment_data.get("twitter", {})
     if twitter and twitter.get("total", 0) > 0:
@@ -139,7 +154,9 @@ def format_sentiment_summary(sentiment_data: Dict) -> str:
         lines.append("🐦 *Sentimen Twitter:*")
         lines.append(f"  🟢 Bullish: {twitter.get('bullish_pct', 0)}%")
         lines.append(f"  🔴 Bearish: {twitter.get('bearish_pct', 0)}%")
-        lines.append(f"  ⚪ Neutral: {twitter.get('neutral_pct', 0)}%")
+    
+    if not lines:
+        lines.append("⚠️ Data tidak tersedia")
     
     return "\n".join(lines)
 

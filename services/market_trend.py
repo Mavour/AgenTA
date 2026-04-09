@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, Optional, List
-from services.news_fetcher import fetch_all_news, get_market_overview
+from services.news_fetcher import fetch_all_news, get_market_overview, get_market_sentiment_from_prices
 from services.sentiment_analyzer import (
     analyze_news_sentiment, 
     analyze_twitter_sentiment, 
@@ -54,6 +54,7 @@ def get_market_prediction(chart_analysis: str = None, pair: str = "BTC") -> Dict
     result = {
         "chart": None,
         "news": None,
+        "price": None,
         "twitter": None,
         "combined": None,
         "timestamp": None
@@ -73,6 +74,9 @@ def get_market_prediction(chart_analysis: str = None, pair: str = "BTC") -> Dict
         news_sentiment = analyze_news_sentiment(news_list)
         result["news"] = news_sentiment
         
+        price_sentiment = get_market_sentiment_from_prices()
+        result["price"] = price_sentiment
+        
         twitter_sentiment = None
         if check_cookie_status().get("status") == "active":
             tweets = fetch_crypto_tweets([pair, "Bitcoin", "Ethereum"], limit=20)
@@ -80,7 +84,7 @@ def get_market_prediction(chart_analysis: str = None, pair: str = "BTC") -> Dict
                 twitter_sentiment = analyze_twitter_sentiment(tweets)
                 result["twitter"] = twitter_sentiment
         
-        result["combined"] = combine_sentiments(news_sentiment, twitter_sentiment)
+        result["combined"] = combine_sentiments(news_sentiment, twitter_sentiment, price_sentiment)
         
     except Exception as e:
         logger.error(f"Error getting market prediction: {e}")
@@ -94,11 +98,28 @@ def format_market_prediction(prediction: Dict) -> str:
     combined = prediction.get("combined", {})
     chart = prediction.get("chart")
     news = prediction.get("news")
+    price = prediction.get("price")
     twitter = prediction.get("twitter")
     
     if chart:
         trend_emoji = "🟢" if chart["trend"] == "bullish" else "🔴" if chart["trend"] == "bearish" else "⚪"
         lines.append(f"📈 *Dari Chart:* {trend_emoji} {chart['trend'].title()} (Kekuatan: {chart['strength']}/10)")
+    
+    if price and price.get("total", 0) > 0:
+        gainers = price.get("gainers", 0)
+        losers = price.get("losers", 0)
+        if gainers > losers:
+            price_emoji = "🟢"
+            price_trend = "Bullish"
+        elif losers > gainers:
+            price_emoji = "🔴"
+            price_trend = "Bearish"
+        else:
+            price_emoji = "⚪"
+            price_trend = "Netral"
+        lines.append(f"\n📊 *Dari Harga (Top 20):* {price_emoji} {price_trend}")
+        lines.append(f"  🟢 Gainers: {gainers} coin")
+        lines.append(f"  🔴 Losers: {losers} coin")
     
     if news and news.get("total", 0) > 0:
         lines.append(f"\n📰 *Dari News:*")
@@ -117,13 +138,13 @@ def format_market_prediction(prediction: Dict) -> str:
         
         score = combined.get("score", 0)
         if score > 0.3:
-            lines.append("  📊 Sinyal: Positif - Chart dan news menunjukkan potensi naik")
+            lines.append("  📊 Sinyal: Positif - Banyak indikator menunjukkan potensi naik")
         elif score < -0.3:
-            lines.append("  📊 Sinyal: Negatif - Chart dan news menunjukkan potensi turun")
+            lines.append("  📊 Sinyal: Negatif - Banyak indikator menunjukkan potensi turun")
         else:
             lines.append("  📊 Sinyal: Netral - Kondisi pasar belum jelas, wait and see")
     
-    if not chart and not news:
+    if not chart and not price:
         lines.append("\n⚠️ Data tidak tersedia. Kirim foto chart untuk analisis.")
     
     lines.append("\n_Disclaimer: Bukan financial advice._")
