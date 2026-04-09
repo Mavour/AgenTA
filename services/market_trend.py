@@ -127,6 +127,7 @@ def format_market_prediction(prediction: Dict) -> str:
     try:
         from services.news_fetcher import fetch_coingecko_news, get_news_with_context
         
+        pair = "BTC"
         prices = fetch_coingecko_news(5)
         btc_eth = {}
         for p in prices:
@@ -134,10 +135,12 @@ def format_market_prediction(prediction: Dict) -> str:
             change = p.get("change_24h", 0)
             if "BTC" in title:
                 btc_eth["BTC"] = change
+                pair = "BTC"
             elif "ETH" in title:
                 btc_eth["ETH"] = change
+                pair = "ETH"
         
-        ctx = get_news_with_context()
+        ctx = get_news_with_context(coin=pair)
         news_items = ctx.get("rss", [])[:3]
         
         if btc_eth:

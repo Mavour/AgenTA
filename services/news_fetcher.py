@@ -42,8 +42,15 @@ def fetch_rss_news(limit: int = 10) -> List[Dict]:
     return news_list[:limit]
 
 
-def get_news_with_context() -> Dict:
+def get_news_with_context(coin: str = None) -> Dict:
     rss_news = fetch_rss_news(limit=15)
+    
+    if coin and rss_news:
+        coin_upper = coin.upper()
+        filtered = [n for n in rss_news if coin_upper in n.get("title", "").upper()]
+        if filtered:
+            return {"rss": filtered}
+    
     if rss_news:
         return {"rss": rss_news}
     
