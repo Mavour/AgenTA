@@ -104,12 +104,13 @@ def get_market_prediction(chart_analysis: str = None, pair: str = "BTC") -> Dict
 
 
 def format_market_prediction(prediction: Dict) -> str:
-    lines = ["🎯 *Market Prediction*\n"]
     combined = prediction.get("combined", {})
     chart = prediction.get("chart")
+    price = prediction.get("price", {})
     news = prediction.get("news")
-    price = prediction.get("price")
     twitter = prediction.get("twitter")
+    
+    lines = ["🎯 *Market Prediction*\n"]
     
     if chart:
         trend_emoji = "🟢" if chart["trend"] == "bullish" else "🔴" if chart["trend"] == "bearish" else "⚪"
@@ -118,27 +119,17 @@ def format_market_prediction(prediction: Dict) -> str:
     if price and price.get("total", 0) > 0:
         gainers = price.get("gainers", 0)
         losers = price.get("losers", 0)
-        trend = "Bearish 🔴" if losers > gainers else "Bullish 🟢" if gainers > losers else "Netral ⚪"
+        top_g = price.get("top_gainers", [])
+        top_l = price.get("top_losers", [])
+        top_g_str = ", ".join([f"{c} (+)" for c in top_g[:3]]) if top_g else "-"
+        top_l_str = ", ".join([f"{c} (-)" for c in top_l[:3]]) if top_l else "-"
         lines.append(f"\n📊 *Dari Harga (Top 20, CoinGecko):*")
-        lines.append(f"  🔴 Losers: {losers} coin | 🟢 Gainers: {gainers} coin")
-        lines.append(f"  📌 Tren: *{trend}*")
-        
-        if price.get("top_gainers"):
-            lines.append(f"  🔥 Top Gainers: {', '.join(price['top_gainers'][:3])}")
-        if price.get("top_losers"):
-            lines.append(f"  📉 Top Losers: {', '.join(price['top_losers'][:3])}")
-    
-    if news and news.get("total", 0) > 0:
-        b_pct = news.get("bullish_pct", 0)
-        bear_pct = news.get("bearish_pct", 0)
-        trend = "Bearish 🔴" if bear_pct > b_pct else "Bullish 🟢" if b_pct > bear_pct else "Netral ⚪"
-        lines.append(f"\n📰 *Dari Harga (24h):* {trend}")
-        lines.append(f"  📈 +1%: {news.get('bullish', 0)} coin | 📉 -1%: {news.get('bearish', 0)} coin")
-    
-    if twitter and twitter.get("total", 0) > 0:
-        lines.append(f"\n🐦 *Dari Twitter:*")
-        lines.append(f"  🟢 Bullish: {twitter.get('bullish_pct', 0)}%")
-        lines.append(f"  🔴 Bearish: {twitter.get('bearish_pct', 0)}%")
+        lines.append(f"  📈 Gainers: {gainers} ({top_g_str})")
+        lines.append(f"  📉 Losers: {losers} ({top_l_str})")
+        if losers > gainers:
+            lines.append(f"  ⚠️ Tren: *BEARISH* - Dominan losers")
+        elif gainers > losers:
+            lines.append(f"  ✅ Tren: *BULLISH* - Dominan gainers")
     
     if combined:
         sentiment_emoji = "🟢" if combined["sentiment"] == "bullish" else "🔴" if combined["sentiment"] == "bearish" else "⚪"
