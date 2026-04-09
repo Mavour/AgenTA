@@ -29,6 +29,7 @@ MENU_KEYBOARD = ReplyKeyboardMarkup(
 
 photo_cache = {}
 last_analysis_cache = {}
+last_analysis_text_cache = {}
 
 
 async def _send_md(message, text, **kwargs):
@@ -90,8 +91,11 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         photo_cache[user_id] = (image_bytes, caption)
         last_analysis_cache[user_id] = "chart"
+        last_analysis_text_cache[user_id] = analysis
 
         analysis = await analyze_chart(image_bytes, caption)
+        
+        last_analysis_text_cache[user_id] = analysis
 
         pair = caption.split()[0] if caption else "Unknown"
         signal = "bullish" if "bullish" in analysis.lower() else "bearish" if "bearish" in analysis.lower() else None
@@ -172,9 +176,17 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     
     context_hint = ""
-    if user_id in last_analysis_cache and last_analysis_cache[user_id] == "chart":
-        context_hint = "User baru saja mengirim foto chart dan mendapat analisis. Pertanyaan ini kemungkinan berkaitan dengan chart tersebut. "
+    last_analysis = last_analysis_cache.get(user_id, "")
+    last_text = last_analysis_text_cache.get(user_id, "")
+    
+    if last_analysis == "chart" and last_text:
+        truncated_text = last_text[:500] if len(last_text) > 500 else last_text
+        context_hint = f"""Konteks: User baru saja mengirim foto chart dan mendapat analisis teknikal berikut:
 
+{truncated_text}
+
+Berdasarkan analisis di atas, jawab pertanyaan berikut: """
+    
     status_msg = await update.message.reply_text(
         "⏳ *Sedang memproses pertanyaan...*\n\nMohon tunggu sebentar.",
         parse_mode="Markdown"
@@ -246,12 +258,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = query.from_user.id
         
         try:
-            if user_id in photo_cache:
-                image_bytes, caption = photo_cache[user_id]
+            if user_id in last_analysis_text_cache:
+                analysis_text = last_analysis_text_cache[user_id]
+                caption = ""
+                if user_id in photo_cache:
+                    _, caption = photo_cache[user_id]
                 
                 from data.export_pdf import generate_pdf_file
                 pair = caption.split()[0] if caption else "Unknown"
-                filename = generate_pdf_file("Analisis dari chart yang dikirim user", pair=pair)
+                filename = generate_pdf_file(analysis_text, pair=pair)
                 
                 await query.message.reply_document(document=open(filename, "rb"))
                 
@@ -261,7 +276,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.message.reply_text("⚠️ Data tidak ditemukan. Silakan kirim ulang chart.")
         except Exception as e:
             logger.exception("Error generating PDF")
-            await query.message.reply_text("⚠️ Gagal membuat PDF.")
+            await query.message.reply_text(f"⚠️ Gagal membuat PDF: {e}")
 
 
 async def journal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):

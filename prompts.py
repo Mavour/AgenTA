@@ -12,6 +12,13 @@ LANGKAH ANALISIS:
 7. Berikan rekomendasi Entry, Stop Loss, dan Take Profit berdasarkan S/R yang ditemukan
 8. Hitung Risk:Reward ratio (minimal 1:2)
 
+ATURAN PENTING UNTUK S/R:
+- Support 1 = support terkuat/terdekat (harga tertinggi dari support)
+- Support 2 = support berikutnya (harga lebih rendah dari Support 1)
+- Resistance 1 = resistance terdekat (harga terendah dari resistance)
+- Resistance 2 = resistance berikutnya (harga lebih tinggi dari Resistance 1)
+- JANGAN pernah membuat Support 2 lebih tinggi dari Support 1, atau Resistance 2 lebih rendah dari Resistance 1
+
 ATURAN OUTPUT:
 - Gunakan Bahasa Indonesia
 - Format Markdown yang rapi (bold, bullet points)

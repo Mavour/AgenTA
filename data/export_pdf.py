@@ -37,30 +37,24 @@ def generate_pdf(analysis_text: str, pair: str = None, timeframe: str = None, si
         
         if line.startswith('**') and line.endswith('**'):
             pdf.set_font('helvetica', 'B', 11)
-            pdf.ln(3)
+            pdf.cell(0, 5, line.replace('*', ''), ln=True)
+            pdf.ln(2)
         elif line.startswith('**'):
             pdf.set_font('helvetica', 'B', 10)
-        elif line.startswith('•') or line.startswith('-'):
+            pdf.cell(0, 5, line.replace('*', ''), ln=True)
+        elif '•' in line or line.startswith('-'):
             pdf.set_font('helvetica', '', 10)
-            pdf.cell(5)
+            pdf.set_x(10)
+            pdf.cell(0, 5, line.replace('•', '').replace('-', '').strip(), ln=True)
         else:
             pdf.set_font('helvetica', '', 10)
-        
-        try:
-            clean_line = line.replace('*', '').replace('_', '')
-            pdf.multi_cell(0, 5, clean_line)
-        except Exception:
-            pdf.ln(1)
+            pdf.cell(0, 5, line.replace('*', '').replace('_', ''), ln=True)
     
     pdf.ln(10)
     pdf.set_font('helvetica', 'I', 8)
     pdf.multi_cell(0, 5, "Disclaimer: Analisis ini bersifat edukatif dan bukan merupakan saran finansial. Selalu lakukan riset mandiri (DYOR).")
     
-    output = io.BytesIO()
-    pdf.output(dest='S').encode('latin-1')
-    
-    output = io.BytesIO(pdf.output(dest='S').encode('latin-1'))
-    return output
+    return io.BytesIO(pdf.output(dest='S').encode('latin-1', errors='replace'))
 
 
 def generate_pdf_file(analysis_text: str, pair: str = None, timeframe: str = None, signal: str = None) -> str:
@@ -80,10 +74,11 @@ def generate_pdf_file(analysis_text: str, pair: str = None, timeframe: str = Non
         if not line:
             pdf.ln(3)
             continue
+        
         try:
-            clean_line = line.replace('*', '').replace('_', '')
+            clean_line = line.replace('*', '').replace('_', '').encode('latin-1', errors='replace').decode('latin-1')
             pdf.multi_cell(0, 5, clean_line)
-        except Exception:
+        except Exception as e:
             pdf.ln(1)
     
     pdf.ln(10)
@@ -91,5 +86,10 @@ def generate_pdf_file(analysis_text: str, pair: str = None, timeframe: str = Non
     pdf.multi_cell(0, 5, "Disclaimer: Analisis ini bersifat edukatif dan bukan merupakan saran finansial.")
     
     filename = f"analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-    pdf.output(filename)
+    try:
+        pdf.output(filename)
+    except Exception as e:
+        filename = f"analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(analysis_text)
     return filename
