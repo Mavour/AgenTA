@@ -115,16 +115,9 @@ def format_market_prediction(prediction: Dict, pair: str = "BTC") -> str:
     lines = ["🎯 *Market Prediction*\n"]
     
     if chart:
-        trend_emoji = "🟢" if chart["trend"] == "bullish" else "🔴" if chart["trend"] == "bearish" else "⚪"
-        lines.append(f"📈 *Dari Chart:* {trend_emoji} {chart['trend'].title()} (Kekuatan: {chart['strength']}/10)")
-    
-    if price and price.get("total", 0) > 0:
-        g = price.get("gainers", 0)
-        l = price.get("losers", 0)
-        if l > g:
-            lines.append(f"📉 Market: {l} turun vs {g} naik")
-        elif g > l:
-            lines.append(f"📈 Market: {g} naik vs {l} turun")
+        trend = chart.get("trend", "netral").lower()
+        trend_emoji = "🟢" if trend == "bullish" else "🔴" if trend == "bearish" else "⚪"
+        lines.append(f"📈 {coin}: {trend_emoji} {trend.title()} (Kekuatan: {chart.get('strength', 5)}/10)")
     
     try:
         from services.news_fetcher import fetch_coingecko_news, get_news_with_context
@@ -159,25 +152,26 @@ def format_market_prediction(prediction: Dict, pair: str = "BTC") -> str:
                 lines.append(f"\n💰 {coin}: {pct} - netral")
         
         if news_items:
-            lines.append(f"\n📰 *Latest:*")
+            found_coin = ctx.get("coin", "").upper()
+            if found_coin and found_coin in coin.upper():
+                lines.append(f"\n📰 *{found_coin} News:*")
+            else:
+                lines.append(f"\n📰 *Latest:*")
             for item in news_items:
                 title = item.get("title", "")[:55]
                 lines.append(f"  • {title}")
+        elif coin_price:
+            lines.append(f"\n📰 Tidak ada berita terbaru untuk {coin}")
     except Exception as e:
         logger.error(f"News error: {e}")
     
-    if combined:
-        sentiment_emoji = "🟢" if combined["sentiment"] == "bullish" else "🔴" if combined["sentiment"] == "bearish" else "⚪"
-        lines.append(f"\n🎯 *Kesimpulan Gabungan:*")
-        lines.append(f"  {sentiment_emoji} *Prediksi: {combined['sentiment'].upper()}* (Confidence: {combined.get('confidence', 50)}%)")
-        
-        score = combined.get("score", 0)
-        if score > 0.3:
-            lines.append("  📊 Sinyal: Positif - Banyak indikator menunjukkan potensi naik")
-        elif score < -0.3:
-            lines.append("  📊 Sinyal: Negatif - Banyak indikator menunjukkan potensi turun")
+    if combined and coin_price:
+        if coin_price < -1:
+            lines.append(f"\n📉 Outlook: Kondisi lemah, kemungkinan turun lagi")
+        elif coin_price > 1:
+            lines.append(f"\n📈 Outlook: Kondisi kuat, kemungkinan naik")
         else:
-            lines.append("  📊 Sinyal: Netral - Kondisi pasar belum jelas, wait and see")
+            lines.append(f"\n➡️ Outlook: Konsolidasi, tunggu breakout")
     
     if not chart and not price:
         lines.append("\n⚠️ Data tidak tersedia. Kirim foto chart untuk analisis.")

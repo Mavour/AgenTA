@@ -49,13 +49,15 @@ def get_news_with_context(coin: str = None) -> Dict:
         coin_upper = coin.upper()
         filtered = [n for n in rss_news if coin_upper in n.get("title", "").upper()]
         if filtered:
-            return {"rss": filtered}
+            return {"rss": filtered, "coin": coin}
+        generic = [n for n in rss_news if any(c in n.get("title", "").upper() for c in ["BITCOIN", "ETHEREUM", "CRYPTO", "COIN", "TOKEN", "CRYPTO"])]
+        if generic:
+            return {"rss": generic, "coin": coin}
     
     if rss_news:
         return {"rss": rss_news}
     
-    logger.warning("All news sources failed, using mock data")
-    return {"mock": []}
+    return {"empty": True}
 
 
 MOCK_NEWS = [
