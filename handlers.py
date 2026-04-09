@@ -258,14 +258,22 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = query.from_user.id
         
         try:
+            analysis_text = None
+            pair = "Unknown"
+            
             if user_id in last_analysis_text_cache:
                 analysis_text = last_analysis_text_cache[user_id]
-                caption = ""
                 if user_id in photo_cache:
                     _, caption = photo_cache[user_id]
-                
+                    pair = caption.split()[0] if caption else "Unknown"
+            else:
+                from data.database import get_user_journal
+                results = get_user_journal(user_id, limit=1)
+                if results:
+                    _, pair, _, analysis_text, _, _, _ = results[0]
+            
+            if analysis_text:
                 from data.export_pdf import generate_pdf_file
-                pair = caption.split()[0] if caption else "Unknown"
                 filename = generate_pdf_file(analysis_text, pair=pair)
                 
                 await query.message.reply_document(document=open(filename, "rb"))
