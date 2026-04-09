@@ -13,8 +13,16 @@ from utils import (
 )
 from data.journal import save_analysis, format_journal_list, format_weekly_report
 from services.news_service import fetch_crypto_news, format_news_response, get_crypto_prices
+from services.market_trend import get_market_prediction, format_market_prediction, get_quick_market_summary
+from data.cookie_manager import check_twitter_cookie
 
 logger = logging.getLogger(__name__)
+
+TREND_TRIGGER_PATTERNS = [
+    "naik", "turun", "bull", "bear", "market", "trend", "prediction",
+    "akan naik", "akan turun", "kemungkinan", "kesimpulan", "prediksi",
+    "arah market", "arah harga", "kesempatan buy", "kesempatan sell"
+]
 
 MENU_KEYBOARD = ReplyKeyboardMarkup(
     [
@@ -168,6 +176,42 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "📊 Report":
         await update.message.reply_text(format_weekly_report(update.message.from_user.id), parse_mode="Markdown")
         return
+
+    text_lower = text.lower()
+    is_trend_question = any(pattern in text_lower for pattern in TREND_TRIGGER_PATTERNS)
+
+    if is_trend_question:
+        await update.message.chat.send_action(action="typing")
+        
+        user_id = update.message.from_user.id
+        last_text = last_analysis_text_cache.get(user_id, "")
+        
+        status_msg = await update.message.reply_text(
+            "🔮 *Menghitung market prediction...*\n\nMenggabungkan analisis chart + news + social media",
+            parse_mode="Markdown"
+        )
+        
+        try:
+            chart_context = last_text if last_text else None
+            pair = "BTC"
+            if user_id in photo_cache:
+                _, caption = photo_cache[user_id]
+                pair = caption.split()[0] if caption else "BTC"
+            
+            prediction = get_market_prediction(chart_context, pair)
+            prediction_text = format_market_prediction(prediction)
+            
+            last_analysis_cache[user_id] = "trend"
+            await status_msg.edit_text(prediction_text, parse_mode="Markdown")
+            return
+
+        except Exception as e:
+            logger.error(f"Error in market prediction: {type(e).__name__}: {e}")
+            await status_msg.edit_text(
+                "⚠️ Gagal menghitung prediksi market. Coba lagi nanti.",
+                parse_mode="Markdown"
+            )
+            return
 
     await update.message.chat.send_action(action="typing")
 
@@ -343,3 +387,45 @@ async def prices_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await status_msg.edit_text(prices, parse_mode="Markdown")
     else:
         await status_msg.edit_text("⚠️ Gagal mengambil harga. Coba lagi nanti.", parse_mode="Markdown")
+
+
+async def twitter_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    status = check_twitter_cookie()
+    await update.message.reply_text(
+        f"🐦 *Twitter Cookie Status*\n\n{status['message']}",
+        parse_mode="Markdown"
+    )
+
+
+async def set_twitter_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args or len(context.args) < 2:
+        await update.message.reply_text(
+            "⚠️ *Format salah!*\n\n"
+            "Gunakan: `/settwitter <auth_token> <ct0>`\n\n"
+            "Cara mendapatkan:\n"
+            "1. Login Twitter di browser\n"
+            "2. DevTools (F12) → Application → Cookies → twitter.com\n"
+            "3. Copy nilai 'auth_token' dan 'ct0'\n\n"
+            "Contoh: `/settwitter abc123 xyz789`",
+            parse_mode="Markdown"
+        )
+        return
+    
+    auth_token = context.args[0]
+    ct0 = context.args[1]
+    
+    from data.cookie_manager import save_twitter_cookie
+    success = save_twitter_cookie(auth_token, ct0)
+    
+    if success:
+        await update.message.reply_text(
+            "✅ *Twitter Cookie Berhasil Disimpan!*\n\n"
+            "Cookie akan aktif selama 7 hari. "
+            "Bot akan menggunakan Twitter untuk sentiment analysis.",
+            parse_mode="Markdown"
+        )
+    else:
+        await update.message.reply_text(
+            "❌ Gagal menyimpan cookie. Coba lagi.",
+            parse_mode="Markdown"
+        )

@@ -12,6 +12,8 @@ from handlers import (
     weekly_report_command,
     news_command,
     prices_command,
+    twitter_status_command,
+    set_twitter_command,
     handle_photo,
     handle_text,
     button_handler,
@@ -36,6 +38,8 @@ async def run_bot():
     app.add_handler(CommandHandler("report", weekly_report_command))
     app.add_handler(CommandHandler("news", news_command))
     app.add_handler(CommandHandler("price", prices_command))
+    app.add_handler(CommandHandler("twitterstatus", twitter_status_command))
+    app.add_handler(CommandHandler("settwitter", set_twitter_command))
 
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
@@ -52,6 +56,8 @@ async def run_bot():
         BotCommand("report", "Weekly report"),
         BotCommand("news", "Crypto news"),
         BotCommand("price", "Harga crypto"),
+        BotCommand("twitterstatus", "Status Twitter cookie"),
+        BotCommand("settwitter", "Set Twitter cookie"),
     ])
     await app.start()
     await app.updater.start_polling(allowed_updates=Update.ALL_TYPES)

@@ -5,3 +5,4 @@ __pycache__/
 .pytest_cache/
 *.pdf
 data/journal.db
+data/twitter_cookie.json
