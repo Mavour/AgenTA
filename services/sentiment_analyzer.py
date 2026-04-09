@@ -128,41 +128,43 @@ def analyze_twitter_sentiment(tweets: List[Dict]) -> Dict:
 
 
 def combine_sentiments(news_sentiment: Dict, twitter_sentiment: Dict = None, price_sentiment: Dict = None) -> Dict:
-    chart_weight = 0.5
-    price_weight = 0.3
-    twitter_weight = 0.2
+    total_score = 0
+    count = 0
     
-    news_score = (
-        (news_sentiment.get("bullish_pct", 0) / 100) * 1 +
-        (news_sentiment.get("neutral_pct", 0) / 100) * 0 +
-        (news_sentiment.get("bearish_pct", 0) / 100) * -1
-    )
+    if news_sentiment and news_sentiment.get("total", 0) > 0:
+        b = news_sentiment.get("bullish", 0)
+        bear = news_sentiment.get("bearish", 0)
+        if b + bear > 0:
+            total_score += (b - bear) / (b + bear)
+            count += 1
     
-    price_score = 0
     if price_sentiment and price_sentiment.get("total", 0) > 0:
-        price_score = (
-            (price_sentiment.get("gainers_pct", 0) / 100) * 1 +
-            (price_sentiment.get("losers_pct", 0) / 100) * -1
-        )
+        g = price_sentiment.get("gainers", 0)
+        l = price_sentiment.get("losers", 0)
+        if g + l > 0:
+            total_score += (g - l) / (g + l)
+            count += 1
     
     if twitter_sentiment and twitter_sentiment.get("total", 0) > 0:
-        twitter_score = (
-            (twitter_sentiment.get("bullish_pct", 0) / 100) * 1 +
-            (twitter_sentiment.get("neutral_pct", 0) / 100) * 0 +
-            (twitter_sentiment.get("bearish_pct", 0) / 100) * -1
-        )
-        combined_score = (news_score * 0.5) + (price_score * 0.3) + (twitter_score * 0.2)
-    else:
-        combined_score = (news_score * 0.6) + (price_score * 0.4)
+        b = twitter_sentiment.get("bullish", 0)
+        bear = twitter_sentiment.get("bearish", 0)
+        if b + bear > 0:
+            total_score += (b - bear) / (b + bear)
+            count += 1
     
-    if combined_score > 0.2:
+    if count == 0:
+        return {"sentiment": "neutral", "confidence": 50, "score": 0}
+    
+    combined = total_score / count
+    
+    if combined > 0.1:
         overall_sentiment = "bullish"
-    elif combined_score < -0.2:
+    elif combined < -0.1:
         overall_sentiment = "bearish"
     else:
         overall_sentiment = "neutral"
     
-    confidence = min(abs(combined_score) * 50 + 50, 95)
+    confidence = min(abs(combined) * 80 + 40, 90)
     
     return {
         "sentiment": overall_sentiment,

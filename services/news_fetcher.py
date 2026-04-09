@@ -201,8 +201,22 @@ def get_market_sentiment_from_prices() -> Dict:
     if not coins_data:
         return {"sentiment": "neutral", "gainers": 0, "losers": 0, "total": 0}
     
-    gainers = sum(1 for c in coins_data if c.get("change_24h", 0) > 0)
-    losers = sum(1 for c in coins_data if c.get("change_24h", 0) < 0)
+    gainers_data = []
+    losers_data = []
+    for c in coins_data:
+        title = c.get("title", "")
+        symbol = title.split("(")[1].split(")")[0] if "(" in title else title.split(":")[0].strip()
+        change = c.get("change_24h", 0)
+        if change > 0:
+            gainers_data.append((symbol, change))
+        elif change < 0:
+            losers_data.append((symbol, change))
+    
+    gainers_data.sort(key=lambda x: x[1], reverse=True)
+    losers_data.sort(key=lambda x: x[1])
+    
+    gainers = len(gainers_data)
+    losers = len(losers_data)
     total = len(coins_data)
     
     if gainers > losers + 3:
@@ -218,7 +232,9 @@ def get_market_sentiment_from_prices() -> Dict:
         "losers": losers,
         "total": total,
         "gainers_pct": round((gainers/total)*100, 1) if total > 0 else 0,
-        "losers_pct": round((losers/total)*100, 1) if total > 0 else 0
+        "losers_pct": round((losers/total)*100, 1) if total > 0 else 0,
+        "top_gainers": [g[0] for g in gainers_data[:3]],
+        "top_losers": [l[0] for l in losers_data[:3]]
     }
 
 

@@ -105,7 +105,6 @@ def get_market_prediction(chart_analysis: str = None, pair: str = "BTC") -> Dict
 
 def format_market_prediction(prediction: Dict) -> str:
     lines = ["🎯 *Market Prediction*\n"]
-    
     combined = prediction.get("combined", {})
     chart = prediction.get("chart")
     news = prediction.get("news")
@@ -119,23 +118,22 @@ def format_market_prediction(prediction: Dict) -> str:
     if price and price.get("total", 0) > 0:
         gainers = price.get("gainers", 0)
         losers = price.get("losers", 0)
-        if gainers > losers:
-            price_emoji = "🟢"
-            price_trend = "Bullish"
-        elif losers > gainers:
-            price_emoji = "🔴"
-            price_trend = "Bearish"
-        else:
-            price_emoji = "⚪"
-            price_trend = "Netral"
-        lines.append(f"\n📊 *Dari Harga (Top 20):* {price_emoji} {price_trend}")
-        lines.append(f"  🟢 Gainers: {gainers} coin")
-        lines.append(f"  🔴 Losers: {losers} coin")
+        trend = "Bearish 🔴" if losers > gainers else "Bullish 🟢" if gainers > losers else "Netral ⚪"
+        lines.append(f"\n📊 *Dari Harga (Top 20, CoinGecko):*")
+        lines.append(f"  🔴 Losers: {losers} coin | 🟢 Gainers: {gainers} coin")
+        lines.append(f"  📌 Tren: *{trend}*")
+        
+        if price.get("top_gainers"):
+            lines.append(f"  🔥 Top Gainers: {', '.join(price['top_gainers'][:3])}")
+        if price.get("top_losers"):
+            lines.append(f"  📉 Top Losers: {', '.join(price['top_losers'][:3])}")
     
     if news and news.get("total", 0) > 0:
-        lines.append(f"\n📰 *Dari News:*")
-        lines.append(f"  🟢 Bullish: {news.get('bullish_pct', 0)}%")
-        lines.append(f"  🔴 Bearish: {news.get('bearish_pct', 0)}%")
+        b_pct = news.get("bullish_pct", 0)
+        bear_pct = news.get("bearish_pct", 0)
+        trend = "Bearish 🔴" if bear_pct > b_pct else "Bullish 🟢" if b_pct > bear_pct else "Netral ⚪"
+        lines.append(f"\n📰 *Dari Harga (24h):* {trend}")
+        lines.append(f"  📈 +1%: {news.get('bullish', 0)} coin | 📉 -1%: {news.get('bearish', 0)} coin")
     
     if twitter and twitter.get("total", 0) > 0:
         lines.append(f"\n🐦 *Dari Twitter:*")
