@@ -191,16 +191,18 @@ Berdasarkan analisis di atas, jawab pertanyaan berikut: """
     )
 
     try:
+        logger.info(f"Processing text question for user {user_id}")
         full_text = context_hint + text
+        logger.info(f"Full text length: {len(full_text)}")
         response = await answer_question(full_text)
         last_analysis_cache[user_id] = "text"
         await status_msg.edit_text(response, parse_mode="Markdown")
 
     except Exception as e:
-        logger.exception("Error in text handler: %s", type(e).__name__)
+        logger.error(f"Error processing question: {type(e).__name__}: {e}")
         try:
             await status_msg.edit_text(
-                format_error_message("Terjadi kesalahan saat memproses pertanyaan."),
+                format_error_message(f"Terjadi kesalahan: {type(e).__name__}"),
                 parse_mode="Markdown"
             )
         except Exception:
