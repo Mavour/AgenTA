@@ -23,24 +23,29 @@ CRYPTO_NEWS_SOURCES = {
 
 def fetch_rss_news(limit: int = 10) -> List[Dict]:
     news_list = []
-    for feed_name, feed_url in RSS_FEEDS.items():
+    seen_urls = set()
+    
+    for feed_name, feed_url in list(RSS_FEEDS.items())[:2]:
         try:
             response = requests.get(feed_url, timeout=10, headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
             })
             if response.status_code == 200:
                 feed = feedparser.parse(response.text)
-                for entry in feed.entries[:limit // len(RSS_FEEDS)]:
+                for entry in feed.entries[:5]:
+                    url = entry.get("link", "")
                     title = entry.get("title", "")
-                    if title and len(title) > 20:
+                    if title and len(title) > 20 and url not in seen_urls:
+                        seen_urls.add(url)
                         news_list.append({
                             "title": title,
                             "source": feed_name.replace("cointelegraph_", "").title(),
-                            "url": entry.get("link", ""),
+                            "url": url,
                             "published": entry.get("published", "")
                         })
         except Exception as e:
             logger.error(f"RSS feed error {feed_name}: {e}")
+    
     return news_list[:limit]
 
 
