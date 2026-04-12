@@ -42,7 +42,6 @@ async def run_bot():
     app.add_handler(CommandHandler("predict", predict_command))
     app.add_handler(CommandHandler("twitterstatus", twitter_status_command))
     app.add_handler(CommandHandler("settwitter", set_twitter_command))
-    app.add_handler(BotCommand("predict", "Market prediction"))
 
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
@@ -59,6 +58,7 @@ async def run_bot():
         BotCommand("report", "Weekly report"),
         BotCommand("news", "Crypto news"),
         BotCommand("price", "Harga crypto"),
+        BotCommand("predict", "Market prediction"),
         BotCommand("twitterstatus", "Status Twitter cookie"),
         BotCommand("settwitter", "Set Twitter cookie"),
     ])
