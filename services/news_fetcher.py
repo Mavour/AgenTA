@@ -196,14 +196,15 @@ def fetch_coingecko_news(limit: int = 20, use_cache: bool = True) -> List[Dict]:
             
             return news_list
 
+    except Exception as e:
+        logger.error(f"CoinGecko error: {e}")
+        return fetch_cmc_prices(limit)
+
 
 def clear_price_cache():
     global _price_cache
     _price_cache = {"data": [], "timestamp": 0}
     logger.info("Price cache cleared")
-    except Exception as e:
-        logger.error(f"CoinGecko error: {e}")
-        return fetch_cmc_prices(limit)
 
 
 def fetch_cmc_prices(limit: int = 20) -> List[Dict]:
