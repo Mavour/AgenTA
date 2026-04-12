@@ -112,6 +112,18 @@ async def analyze_chart(image_bytes: bytes, caption: str = "") -> str:
     return await _make_request(CHART_ANALYSIS_PROMPT, user_content, model=MODEL_VISION)
 
 
-async def answer_question(text: str) -> str:
+async def answer_question(text: str, context: dict = None) -> str:
     from prompts import QA_PROMPT
-    return await _make_request(QA_PROMPT, [{"type": "text", "text": text}], model=MODEL_CHAT)
+    
+    price_ctx = context.get("price", "Tidak ada") if context else "Tidak ada"
+    news_ctx = context.get("news", "Tidak ada") if context else "Tidak ada"
+    chart_ctx = context.get("chart", "Tidak ada") if context else "Tidak ada"
+    
+    prompt = QA_PROMPT.format(
+        price_context=price_ctx,
+        news_context=news_ctx,
+        chart_context=chart_ctx,
+        question=text
+    )
+    
+    return await _make_request(prompt, [{"type": "text", "text": text}], model=MODEL_CHAT)

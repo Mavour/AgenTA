@@ -217,7 +217,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.chat.send_action(action="typing")
 
-    user_id = update.message.from_user.id
+user_id = update.message.from_user.id
+    pair = "BTC"
+    if user_id in photo_cache:
+        _, caption = photo_cache[user_id]
+        pair = caption.split()[0].upper() if caption else "BTC"
     
     context_hint = ""
     last_analysis = last_analysis_cache.get(user_id, "")
@@ -225,22 +229,44 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if last_analysis == "chart" and last_text:
         truncated_text = last_text[:500] if len(last_text) > 500 else last_text
-        context_hint = f"""Konteks: User baru saja mengirim foto chart dan mendapat analisis teknikal berikut:
-
-{truncated_text}
-
-Berdasarkan analisis di atas, jawab pertanyaan berikut: """
+        context_hint = f"Analisis chart: {truncated_text}\n\n"
     
     status_msg = await update.message.reply_text(
-        "⏳ *Sedang memproses pertanyaan...*\n\nMohon tunggu sebentar.",
+        "⏳ *Sedang memproses...*",
         parse_mode="Markdown"
     )
-
+    
     try:
-        logger.info(f"Processing text question for user {user_id}")
+        from services.market_trend import get_market_prediction
+        from services.news_fetcher import fetch_coingecko_news, get_news_with_context
+        
+        prices = fetch_coingecko_news(5)
+        btc_price = eth_price = "N/A"
+        for p in prices:
+            title = p.get("title", "")
+            chg = p.get("change_24h", 0)
+            if "BTC" in title:
+                btc_price = f"{chg:+.2f}%" if chg else "N/A"
+            elif "ETH" in title:
+                eth_price = f"{chg:+.2f}%" if chg else "N/A"
+        
+        news_data = get_news_with_context(pair)
+        news_items = news_data.get("rss", [])[:3]
+        news_summary = "\n".join([n.get("title", "")[:50] for n in news_items]) if news_items else "Tidak ada berita terkini"
+        
+        price_context = f"BTC: {btc_price}, ETH: {eth_price}"
+        news_context = news_summary
+        chart_context = truncated_text if last_analysis == "chart" else "Tidak ada analisis chart sebelumnya"
+        
+        llm_context = {
+            "price": price_context,
+            "news": news_context,
+            "chart": chart_context
+        }
+        
         full_text = context_hint + text
-        logger.info(f"Full text length: {len(full_text)}")
-        response = await answer_question(full_text)
+        response = await answer_question(full_text, llm_context)
+        
         last_analysis_cache[user_id] = "text"
         await status_msg.edit_text(response, parse_mode="Markdown")
 
