@@ -113,11 +113,14 @@ async def analyze_chart(image_bytes: bytes, caption: str = "") -> str:
 
 
 async def answer_question(text: str, context: dict = None) -> str:
-    from prompts import QA_PROMPT
+    from prompts import QA_PROMPT, FALLBACK_PROMPT
     
-    price_ctx = context.get("price", "Tidak ada") if context else "Tidak ada"
-    news_ctx = context.get("news", "Tidak ada") if context else "Tidak ada"
-    chart_ctx = context.get("chart", "Tidak ada") if context else "Tidak ada"
+    if "blur" in text.lower() or "tidak jelas" in text.lower():
+        return await _make_request(FALLBACK_PROMPT, [{"type": "text", "text": text}], model=MODEL_CHAT)
+    
+    price_ctx = "Tidak ada" if context is None else context.get("price", "Tidak ada")
+    news_ctx = "Tidak ada" if context is None else context.get("news", "Tidak ada")
+    chart_ctx = "Tidak ada" if context is None else context.get("chart", "Tidak ada")
     
     prompt = QA_PROMPT.format(
         price_context=price_ctx,

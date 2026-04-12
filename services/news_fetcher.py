@@ -1,10 +1,14 @@
 import requests
 import logging
 import feedparser
+import time
 from datetime import datetime
 from typing import List, Dict
 
 logger = logging.getLogger(__name__)
+
+_price_cache = {"data": [], "timestamp": 0}
+PRICE_CACHE_TTL = 300
 
 RSS_FEEDS = {
     "cointelegraph": "https://cointelegraph.com/rss",
@@ -141,7 +145,14 @@ def fetch_financialjuice_news(limit: int = 10) -> List[Dict]:
     return []
 
 
-def fetch_coingecko_news(limit: int = 20) -> List[Dict]:
+def fetch_coingecko_news(limit: int = 20, use_cache: bool = True) -> List[Dict]:
+    global _price_cache
+    
+    now = time.time()
+    if use_cache and _price_cache.get("data") and (now - _price_cache["timestamp"]) < PRICE_CACHE_TTL:
+        logger.info(f"Using cached price data ({len(_price_cache['data'])} items)")
+        return _price_cache["data"][:limit]
+    
     try:
         url = "https://api.coingecko.com/api/v3/coins/markets"
         params = {
@@ -151,7 +162,7 @@ def fetch_coingecko_news(limit: int = 20) -> List[Dict]:
             "page": 1,
             "sparkline": False
         }
-        response = requests.get(url, params=params, timeout=15)
+        response = requests.get(url, params=params, timeout=10)
         
         if response.status_code == 429:
             logger.warning("CoinGecko rate limited, using fallback")
@@ -179,7 +190,17 @@ def fetch_coingecko_news(limit: int = 20) -> List[Dict]:
                     losers.append(coin['symbol'].upper())
             
             logger.info(f"Got {len(news_list)} data from CoinGecko - {len(gainers)} gainers, {len(losers)} losers")
+            
+            _price_cache["data"] = news_list
+            _price_cache["timestamp"] = time.time()
+            
             return news_list
+
+
+def clear_price_cache():
+    global _price_cache
+    _price_cache = {"data": [], "timestamp": 0}
+    logger.info("Price cache cleared")
     except Exception as e:
         logger.error(f"CoinGecko error: {e}")
         return fetch_cmc_prices(limit)
