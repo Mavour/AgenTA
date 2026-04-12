@@ -378,6 +378,30 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await status_msg.edit_text(response, parse_mode="Markdown")
 
 
+async def predict_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.chat.send_action(action="typing")
+    
+    pair = context.args[0].upper() if context.args else "BTC"
+    user_id = update.message.from_user.id
+    
+    last_text = last_analysis_text_cache.get(user_id, "")
+    chart_context = last_text if last_text else None
+    
+    status_msg = await update.message.reply_text("🎯 *Menghitung prediksi...*", parse_mode="Markdown")
+    
+    try:
+        prediction = get_market_prediction(chart_context, pair)
+        response = format_market_prediction(prediction, pair)
+        
+        await status_msg.edit_text(response, parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"Predict error: {e}")
+        await status_msg.edit_text(
+            f"⚠️ Gagal mengambil prediksi untuk {pair}.\nCoba lagi nanti.",
+            parse_mode="Markdown"
+        )
+
+
 async def prices_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.chat.send_action(action="typing")
     

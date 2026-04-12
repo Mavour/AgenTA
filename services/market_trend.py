@@ -103,6 +103,12 @@ def get_market_prediction(chart_analysis: str = None, pair: str = "BTC") -> Dict
     return result
 
 
+def get_quick_prediction(pair: str = "BTC") -> str:
+    """Quick prediction without chart context"""
+    prediction = get_market_prediction(None, pair)
+    return format_market_prediction(prediction, pair)
+
+
 def format_market_prediction(prediction: Dict, pair: str = "BTC") -> str:
     combined = prediction.get("combined", {})
     chart = prediction.get("chart")

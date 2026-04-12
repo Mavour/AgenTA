@@ -12,6 +12,7 @@ from handlers import (
     weekly_report_command,
     news_command,
     prices_command,
+    predict_command,
     twitter_status_command,
     set_twitter_command,
     handle_photo,
@@ -38,8 +39,10 @@ async def run_bot():
     app.add_handler(CommandHandler("report", weekly_report_command))
     app.add_handler(CommandHandler("news", news_command))
     app.add_handler(CommandHandler("price", prices_command))
+    app.add_handler(CommandHandler("predict", predict_command))
     app.add_handler(CommandHandler("twitterstatus", twitter_status_command))
     app.add_handler(CommandHandler("settwitter", set_twitter_command))
+    app.add_handler(BotCommand("predict", "Market prediction"))
 
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
