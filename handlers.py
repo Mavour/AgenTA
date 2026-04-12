@@ -111,18 +111,11 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_analysis(user_id, analysis, pair=pair, timeframe="Unknown", signal=signal)
 
         keyboard = [
-                [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await status_msg.edit_text(analysis, parse_mode="Markdown", reply_markup=reply_markup)
-        except Exception as img_err:
-            logger.error(f"Image generation error: {img_err}")
-            keyboard = [
-                [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await status_msg.edit_text(analysis, parse_mode="Markdown", reply_markup=reply_markup)
+            [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await status_msg.edit_text(analysis, parse_mode="Markdown", reply_markup=reply_markup)
 
     except Exception as e:
         logger.exception("Error in photo handler: %s", type(e).__name__)
