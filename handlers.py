@@ -110,28 +110,12 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         signal = "bullish" if "bullish" in analysis.lower() else "bearish" if "bearish" in analysis.lower() else None
         save_analysis(user_id, analysis, pair=pair, timeframe="Unknown", signal=signal)
 
-        try:
-            from services.chart_visualizer import generate_analysis_image
-            chart_image_bytes = generate_analysis_image(analysis, pair)
-            
-            import tempfile
-            import os
-            
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
-                tmp.write(chart_image_bytes)
-                tmp_path = tmp.name
-            
-            try:
-                await update.message.reply_photo(tmp_path, caption=f"📈 *Visualisasi {pair}*\n\n{analysis[:300]}...")
-            finally:
-                os.unlink(tmp_path)
-            
-            keyboard = [
+        keyboard = [
                 [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await update.message.reply_text("📊 *Analisis Lengkap:*\n\n" + analysis, parse_mode="Markdown", reply_markup=reply_markup)
-            await status_msg.delete()
+            
+            await status_msg.edit_text(analysis, parse_mode="Markdown", reply_markup=reply_markup)
         except Exception as img_err:
             logger.error(f"Image generation error: {img_err}")
             keyboard = [
