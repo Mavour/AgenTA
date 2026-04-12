@@ -183,13 +183,17 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_trend_question = any(pattern in text_lower for pattern in TREND_TRIGGER_PATTERNS)
 
     if is_trend_question:
+        user_id = update.message.from_user.id
+        has_chart_context = bool(last_analysis_cache.get(user_id) == "chart" and last_analysis_text_cache.get(user_id))
+        
+        if has_chart_context or "?" in text:
+            await _handle_qa_with_context(update, text)
+            return
+        
         await update.message.chat.send_action(action="typing")
         
-        user_id = update.message.from_user.id
-        last_text = last_analysis_text_cache.get(user_id, "")
-        
         status_msg = await update.message.reply_text(
-            "🔮 *Menghitung market prediction...*\n\nMenggabungkan analisis chart + news + social media",
+            "🔮 *Menghitung market prediction...",
             parse_mode="Markdown"
         )
         
@@ -209,15 +213,15 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         except Exception as e:
             logger.error(f"Error in market prediction: {type(e).__name__}: {e}")
-            await status_msg.edit_text(
-                "⚠️ Gagal menghitung prediksi market. Coba lagi nanti.",
-                parse_mode="Markdown"
-            )
+            await _handle_qa_with_context(update, text)
             return
 
-    await update.message.chat.send_action(action="typing")
+    await _handle_qa_with_context(update, text)
 
+
+async def _handle_qa_with_context(update: Update, text: str):
     user_id = update.message.from_user.id
+    
     pair = "BTC"
     if user_id in photo_cache:
         _, caption = photo_cache[user_id]
