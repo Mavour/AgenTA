@@ -12,6 +12,9 @@ RSS_FEEDS = {
     "cointelegraph_markets": "https://cointelegraph.com/rss/tag/markets",
     "cointelegraph_bitcoin": "https://cointelegraph.com/rss/tag/bitcoin",
     "cointelegraph_ethereum": "https://cointelegraph.com/rss/tag/ethereum",
+    "cointelegraph_regulation": "https://cointelegraph.com/rss/tag/regulation",
+    "cointelegraph_etf": "https://cointelegraph.com/rss/tag/etf",
+    "bloomberg_crypto": "https://feeds.bloomberg.com/markets/news/rss100.xml",
 }
 
 MOCK_NEWS = []
