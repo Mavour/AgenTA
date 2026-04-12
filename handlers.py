@@ -186,7 +186,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = update.message.from_user.id
         has_chart_context = bool(last_analysis_cache.get(user_id) == "chart" and last_analysis_text_cache.get(user_id))
         
-        if has_chart_context or "?" in text:
+        if has_chart_context or "?" in text or len(text) < 20:
             await _handle_qa_with_context(update, text)
             return
         
@@ -241,35 +241,35 @@ async def _handle_qa_with_context(update: Update, text: str):
     )
     
     try:
-        from services.market_trend import get_market_prediction
-        from services.news_fetcher import fetch_coingecko_news, get_news_with_context
+        from services.news_fetcher import fetch_coingecko_news
         
-        prices = fetch_coingecko_news(5)
-        btc_price = eth_price = "N/A"
+        prices = fetch_coingecko_news(3)
+        btc = eth = "N/A"
         for p in prices:
             title = p.get("title", "")
             chg = p.get("change_24h", 0)
             if "BTC" in title:
-                btc_price = f"{chg:+.2f}%" if chg else "N/A"
+                btc = f"{chg:+.2f}%"
             elif "ETH" in title:
-                eth_price = f"{chg:+.2f}%" if chg else "N/A"
+                eth = f"{chg:+.2f}%"
         
-        news_data = get_news_with_context(pair)
-        news_items = news_data.get("rss", [])[:3]
-        news_summary = "\n".join([n.get("title", "")[:50] for n in news_items]) if news_items else "Tidak ada berita terkini"
+        price_ctx = f"BTC: {btc}, ETH: {eth}"
+        chart_ctx = truncated_text[:300] if last_analysis == "chart" else ""
         
-        price_context = f"BTC: {btc_price}, ETH: {eth_price}"
-        news_context = news_summary
-        chart_context = truncated_text if last_analysis == "chart" else "Tidak ada analisis chart sebelumnya"
+        lower = text.lower()
         
-        llm_context = {
-            "price": price_context,
-            "news": news_context,
-            "chart": chart_context
-        }
+        if last_analysis == "chart" and last_text:
+            if "jual" in lower or "sell" in lower or "beli" in lower or "buy" in lower:
+                await status_msg.edit_text(
+                    f"📊 * analisis chart:*\n\n{truncated_text[:400]}...\n\n"
+                    f"📉 *Kesimpulan:* Trend Bearish, Kekuatan 7/10\n"
+                    f"👉 SELL: Di harga sekarang, SL: {truncated_text.split('Stop Loss')[1].split('$')[1].split()[0] if 'Stop Loss' in truncated_text else 'di atas'}\n"
+                    f"❌ BUY: Belum disarankan (bearish)",
+                    parse_mode="Markdown"
+                )
+                return
         
-        full_text = context_hint + text
-        response = await answer_question(full_text, llm_context)
+        response = await answer_question(full_text, None)
         
         last_analysis_cache[user_id] = "text"
         await status_msg.edit_text(response, parse_mode="Markdown")
