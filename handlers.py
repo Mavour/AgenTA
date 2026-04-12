@@ -114,12 +114,23 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             from services.chart_visualizer import generate_analysis_image
             chart_image_bytes = generate_analysis_image(analysis, pair)
             
-            from telegram import InputMediaPhoto
-            media = [
-                InputMediaPhoto(analysis[:1024], caption=f"📊 *Analisis {pair}*\n\n{analysis[:500]}..."),
-                InputMediaPhoto(chart_image_bytes, caption=f"📈 *Visualisasi {pair}*")
+            import tempfile
+            import os
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+                tmp.write(chart_image_bytes)
+                tmp_path = tmp.name
+            
+            try:
+                await update.message.reply_photo(tmp_path, caption=f"📈 *Visualisasi {pair}*\n\n{analysis[:300]}...")
+            finally:
+                os.unlink(tmp_path)
+            
+            keyboard = [
+                [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
             ]
-            await update.message.reply_media_group(media)
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await update.message.reply_text("📊 *Analisis Lengkap:*\n\n" + analysis, parse_mode="Markdown", reply_markup=reply_markup)
             await status_msg.delete()
         except Exception as img_err:
             logger.error(f"Image generation error: {img_err}")
