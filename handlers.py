@@ -86,7 +86,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.chat.send_action(action="typing")
 
     status_msg = await update.message.reply_text(
-        "⏳ *Sedang menganalisis chart...*\n\nMohon tunggu sebentar.",
+        "⏳ *Menganalisis & membuat visualisasi...*\n\nMohon tunggu sebentar.",
         parse_mode="Markdown"
     )
 
@@ -102,19 +102,32 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         photo_cache[user_id] = (image_bytes, caption)
         last_analysis_cache[user_id] = "chart"
 
+        pair = caption.split()[0] if caption else "BTC"
+        
         analysis = await analyze_chart(image_bytes, caption)
         last_analysis_text_cache[user_id] = analysis
 
-        pair = caption.split()[0] if caption else "Unknown"
         signal = "bullish" if "bullish" in analysis.lower() else "bearish" if "bearish" in analysis.lower() else None
         save_analysis(user_id, analysis, pair=pair, timeframe="Unknown", signal=signal)
 
-        keyboard = [
-            [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        await status_msg.edit_text(analysis, parse_mode="Markdown", reply_markup=reply_markup)
+        try:
+            from services.chart_visualizer import generate_analysis_image
+            chart_image_bytes = generate_analysis_image(analysis, pair)
+            
+            from telegram import InputMediaPhoto
+            media = [
+                InputMediaPhoto(analysis[:1024], caption=f"📊 *Analisis {pair}*\n\n{analysis[:500]}..."),
+                InputMediaPhoto(chart_image_bytes, caption=f"📈 *Visualisasi {pair}*")
+            ]
+            await update.message.reply_media_group(media)
+            await status_msg.delete()
+        except Exception as img_err:
+            logger.error(f"Image generation error: {img_err}")
+            keyboard = [
+                [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await status_msg.edit_text(analysis, parse_mode="Markdown", reply_markup=reply_markup)
 
     except Exception as e:
         logger.exception("Error in photo handler: %s", type(e).__name__)
