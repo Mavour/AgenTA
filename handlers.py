@@ -251,17 +251,17 @@ async def _handle_qa_with_context(update: Update, text: str):
     try:
         from services.news_fetcher import fetch_coingecko_news
         
-        prices = fetch_coingecko_news(3)
+        prices = fetch_coingecko_news(2, use_cache=True)
         btc = eth = "N/A"
         for p in prices:
             title = p.get("title", "")
             chg = p.get("change_24h", 0)
-            if "BTC" in title:
-                btc = f"{chg:+.2f}%"
-            elif "ETH" in title:
-                eth = f"{chg:+.2f}%"
+            if "BTC" in title.upper():
+                btc = f"{chg:+.2f}%" if chg else "N/A"
+            elif "ETH" in title.upper():
+                eth = f"{chg:+.2f}%" if chg else "N/A"
         
-        price_ctx = f"BTC: {btc}, ETH: {eth}"
+        price_ctx = f"BTC: {btc}, ETH: {eth}" if btc != "N/A" else "Data tidak tersedia"
         chart_ctx = truncated_text[:300] if last_analysis == "chart" else ""
         
         lower = text.lower()
