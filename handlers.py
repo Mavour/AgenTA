@@ -217,7 +217,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.chat.send_action(action="typing")
 
-user_id = update.message.from_user.id
+    user_id = update.message.from_user.id
     pair = "BTC"
     if user_id in photo_cache:
         _, caption = photo_cache[user_id]
