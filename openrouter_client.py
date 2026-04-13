@@ -87,6 +87,10 @@ async def _make_request(system_prompt: str, user_content: list, retry_count: int
 
 
 async def analyze_chart(image_bytes: bytes, caption: str = "") -> str:
+    from utils import get_moon_phase
+    
+    moon = get_moon_phase()
+    
     base64_image = _encode_image(image_bytes)
     user_content = [
         {
@@ -108,8 +112,8 @@ async def analyze_chart(image_bytes: bytes, caption: str = "") -> str:
             "text": "Silakan analisis chart ini."
         })
 
-    from prompts import CHART_ANALYSIS_PROMPT
-    return await _make_request(CHART_ANALYSIS_PROMPT, user_content, model=MODEL_VISION)
+    prompt = CHART_ANALYSIS_PROMPT.replace("{moon_phase}", moon["phase"]).replace("{moon_illumination}", str(moon["illumination"]))
+    return await _make_request(prompt, user_content, model=MODEL_VISION)
 
 
 async def answer_question(text: str, context: dict = None) -> str:

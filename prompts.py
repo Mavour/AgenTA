@@ -75,10 +75,10 @@ FORMAT OUTPUT (WAJIB SEMUA ISI):
 
 **📈 INDIKATOR:** RSI:..., MACD:..., EMA:...
 
-**🌙 MOON PHASE:**
-   - Fase: [New Moon/Waxing Crescent/First Quarter/Waxing Gibbous/Full Moon/Waning Gibbous/Last Quarter/Waning Crescent]
-   - Iluminasi: [X]%
-   - Timing:[Favor/Mid/Favor]
+**🌙 MOON PHASE:** (DATA SAAT INI)
+   - Fase: {moon_phase}
+   - Iluminasi: {moon_illumination}%
+   - Timing:[MOON_INSIGHT]
    - Catatan: Pengaruh fase bulan terhadap volatility
 
 **🎯 TRADING PLAN:**
