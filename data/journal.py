@@ -2,7 +2,15 @@ from data.database import add_journal, get_user_journal, clear_user_journal, get
 
 
 def save_analysis(user_id: int, analysis_text: str, pair: str = None, timeframe: str = None, signal: str = None, price_entry: float = None):
-    pair = pair or "Unknown"
+    KNOWN_COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "BNB", "DOGE", "AVAX", "DOT", "MATIC", "LINK", "UNI", "ATOM", "LTC", "ETC", "XLM", "APT", "ARB", "OP", "NEAR", "FIL", "ALGO", "VET", "HBAR", "ICP", "SAND", "MANA", "AXS", "AAVE", "MKR", "SNX", "CRV"]
+    
+    if pair:
+        pair = pair.upper()
+        if pair not in KNOWN_COINS:
+            pair = "Unknown"
+    else:
+        pair = "Unknown"
+    
     timeframe = timeframe or "Unknown"
     
     signal_lower = None
