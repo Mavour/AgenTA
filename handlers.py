@@ -39,6 +39,7 @@ MENU_KEYBOARD = ReplyKeyboardMarkup(
 )
 
 photo_cache = {}
+photo_cache_2 = {}
 last_analysis_cache = {}
 last_analysis_text_cache = {}
 
@@ -99,6 +100,15 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await photo.get_file()
         image_bytes = await file.download_as_bytearray()
         image_bytes = bytes(image_bytes)
+
+        from openrouter_client import _check_image_quality
+        quality = _check_image_quality(image_bytes)
+        if quality["quality"] != "ok":
+            await status_msg.edit_text(
+                f"⚠️ *Gambar Jelek*\n\n{quality['reason']}\n\nSilakan kirim foto chart yang lebih jelas.",
+                parse_mode="Markdown"
+            )
+            return
 
         photo_cache[user_id] = (image_bytes, caption)
         last_analysis_cache[user_id] = "chart"

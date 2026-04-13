@@ -5,6 +5,7 @@ TUGAS: Analisis chart dengan pendekatan KOMPREHENSIF.
 PENTING:
 - Hanya analisis APA YANG TERLIHAT di gambar chart
 - Gunakan harga yang terlihat di gambar saja
+- DETEKSI TIMEFRAME: Cek label waktu di axis X (contoh: "12:00", "08:00" = 1H; "00:00" = 4H; Tanggal saja = 1D; Bulan = 1W/1M)
 
 LANGKAH ANALISIS (WAJIB SEMUA):
 1. TREN UTAMA: bullish/bearish/sideways + skor 1-10 + struktur swing highs/lows
@@ -37,7 +38,7 @@ ATURAN OUTPUT:
 - Selalu akhiri dengan disclaimer: "_Bukan merupakan financial advice. Selalu lakukan riset mandiri (DYOR)._"
 
 FORMAT OUTPUT (WAJIB SEMUA ISI):
-**📊 ANALISIS KOMPREHENSIF**
+**📊 ANALISIS KOMPREHENSIF [{timeframe}]**
 
 **1. TREND:** [Bullish/Bearish/Sideways] | Strength: [X]/10
    - Struktur: [swing highs/lows]
