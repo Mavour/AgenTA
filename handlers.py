@@ -224,7 +224,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 image_bytes, caption = photo_cache[user_id]
 
             if image_bytes:
-                analysis = await analyze_chart(image_bytes, caption)
+                analysis = await analyze_chart(image_bytes, caption, pair)
 
                 keyboard = [
                     [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
