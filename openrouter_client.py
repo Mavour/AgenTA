@@ -105,12 +105,12 @@ async def analyze_chart(image_bytes: bytes, caption: str = "", pair: str = "BTC"
     if caption.strip():
         user_content.append({
             "type": "text",
-            "text": f"Konteks tambahan dari user: {caption.strip()}"
+            "text": f"INI ADALAH CHART {pair}. {caption.strip()}"
         })
     else:
         user_content.append({
             "type": "text",
-            "text": "Silakan analisis chart ini."
+            "text": f"Analisis chart {pair}. JANGAN membuat harga sendiri - hanya gunakan harga yang terlihat di gambar."
         })
 
     moon_advice = "Favor untuk entry baru" if moon["phase"] == "New Moon" else "Volatility tinggi - take profit" if moon["phase"] == "Full Moon" else "Building phase" if moon["phase"] in ["Waxing Crescent", "First Quarter"] else "Evaluasi posisi"
