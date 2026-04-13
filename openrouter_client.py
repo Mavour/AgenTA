@@ -86,7 +86,7 @@ async def _make_request(system_prompt: str, user_content: list, retry_count: int
             raise OpenRouterError("Format respons API tidak dikenali")
 
 
-async def analyze_chart(image_bytes: bytes, caption: str = "") -> str:
+async def analyze_chart(image_bytes: bytes, caption: str = "", pair: str = "BTC") -> str:
     from utils import get_moon_phase
     from prompts import CHART_ANALYSIS_PROMPT
     
@@ -114,13 +114,6 @@ async def analyze_chart(image_bytes: bytes, caption: str = "") -> str:
         })
 
     moon_advice = "Favor untuk entry baru" if moon["phase"] == "New Moon" else "Volatility tinggi - take profit" if moon["phase"] == "Full Moon" else "Building phase" if moon["phase"] in ["Waxing Crescent", "First Quarter"] else "Evaluasi posisi"
-    
-    pair = "BTC"
-    if caption:
-        import re
-        match = re.search(r"([A-Z]{2,10})(?:/|\s)", caption.upper())
-        if match:
-            pair = match.group(1)
     
     moon_advice = "Favor untuk entry baru" if moon["phase"] == "New Moon" else "Volatility tinggi - take profit" if moon["phase"] == "Full Moon" else "Building phase" if moon["phase"] in ["Waxing Crescent", "First Quarter"] else "Evaluasi posisi"
     
