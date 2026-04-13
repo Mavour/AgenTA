@@ -125,6 +125,11 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await _handle_qa_with_context(update, text)
 
 
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.strip() if update.message.text else ""
+    await _handle_qa_with_context(update, text)
+
+
 async def _handle_qa_with_context(update: Update, text: str):
     user_id = update.message.from_user.id
     
