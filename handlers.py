@@ -110,7 +110,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if match:
                 pair = match.group(1)
         
-        analysis = await analyze_chart(image_bytes, caption, pair)
+        context = f"Chart {pair} - " + caption if caption else f"Chart {pair}"
+        analysis = await analyze_chart(image_bytes, context)
         last_analysis_text_cache[user_id] = analysis
 
         signal = "bullish" if "bullish" in analysis.lower() else "bearish" if "bearish" in analysis.lower() else None
