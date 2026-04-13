@@ -88,6 +88,7 @@ async def _make_request(system_prompt: str, user_content: list, retry_count: int
 
 async def analyze_chart(image_bytes: bytes, caption: str = "", pair: str = "BTC") -> str:
     from utils import get_moon_phase
+    from prompts import CHART_ANALYSIS_PROMPT
     
     moon = get_moon_phase()
     
