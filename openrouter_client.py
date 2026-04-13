@@ -112,7 +112,24 @@ async def analyze_chart(image_bytes: bytes, caption: str = "") -> str:
             "text": "Silakan analisis chart ini."
         })
 
-    prompt = CHART_ANALYSIS_PROMPT.replace("{moon_phase}", moon["phase"]).replace("{moon_illumination}", str(moon["illumination"]))
+    pair = "BTC"
+    import re
+    if caption:
+        match = re.search(r"([A-Z]{2,10})(?:/|\\s)", caption.upper())
+        if match:
+            pair = match.group(1)
+    
+    moon_advice = ""
+    if moon["phase"] == "New Moon":
+        moon_advice = "Favor untuk entry baru"
+    elif moon["phase"] == "Full Moon":
+        moon_advice = "Volatility tinggi - take profit"
+    elif moon["phase"] in ["Waxing Crescent", "First Quarter"]:
+        moon_advice = "Building phase"
+    else:
+        moon_advice = "Evaluasi posisi"
+    
+    prompt = CHART_ANALYSIS_PROMPT.replace("{moon_phase}", moon["phase"]).replace("{moon_illumination}", str(moon["illumination"])).replace("{pair}", pair).replace("{MOON_INSIGHT}", moon_advice)
     return await _make_request(prompt, user_content, model=MODEL_VISION)
 
 
