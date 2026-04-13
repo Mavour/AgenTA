@@ -102,3 +102,62 @@ def format_help() -> str:
 
 def format_analysis_with_keyboard(analysis: str) -> str:
     return analysis
+
+
+def get_moon_phase(date=None):
+    import datetime, math
+    
+    new_moon_jd = 2451550.1
+    synodic_period = 29.530588853
+    
+    if date is None:
+        date = datetime.datetime.now()
+    elif isinstance(date, str):
+        date = datetime.datetime.fromisoformat(date)
+    
+    year = date.year
+    month = date.month
+    day = date.day
+    
+    a = (14 - month) // 12
+    y = year + 4800 - a
+    m = month + 12 * a - 3
+    
+    jd = day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045
+    days_since = (jd - new_moon_jd) % synodic_period
+    phase = int(days_since)
+    
+    phases = [
+        ("New Moon", 0),
+        ("Waxing Crescent", 1),
+        ("First Quarter", 2),
+        ("Waxing Gibbous", 3),
+        ("Full Moon", 4),
+        ("Waning Gibbous", 5),
+        ("Last Quarter", 6),
+        ("Waning Crescent", 7),
+    ]
+    
+    idx = int(days_since / 3.6913236)
+    idx = min(idx, 7)
+    name = phases[idx][0]
+    
+    illumination = math.sin((days_since / synodic_period) * math.pi) ** 2 * 100
+    
+    if idx == 0:
+        timing = "🌓 Favor: Mulai siklus baru / Entry baru"
+    elif idx in [1, 2]:
+        timing = "🌓 Building: Akumulasi posisi"
+    elif idx in [3, 4]:
+        timing = "🌕 Peak: Volatility tinggi / Risk tinggi"
+    elif idx in [5, 6]:
+        timing = "🌗 Koreksi: Evaluasi /ambil profit"
+    else:
+        timing = "🌘 Penyiapan: Persiapan siklus baru"
+    
+    return {
+        "phase": name,
+        "illumination": round(illumination, 1),
+        "timing": timing,
+        "synodic_day": round(days_since, 1),
+    }

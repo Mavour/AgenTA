@@ -114,6 +114,14 @@ def update_user(user_id: int, username: str = None, first_name: str = None):
         VALUES (?, ?, ?, ?)
     """, (user_id, username, first_name, datetime.now()))
     conn.commit()
+
+
+def clear_user_journal(user_id: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM journal WHERE user_id = ?", (user_id,))
+    conn.commit()
+    conn.close()
     conn.close()
 
 

@@ -15,7 +15,7 @@ LANGKAH ANALISIS (WAJIB SEMUA):
 10. SUPPLY/DEMAND ZONES:zona horizontal tempat harga sering bounce (beda dari S/R line biasa)
 11. TREND STRUCTURE: Break of Structure (BOS) - harga breakout highs/lows sebelumnya, Change of Character (CHOCH)
 12. WYCKOFF METHOD: Identifikasi fase Accumulation/Distribution, Spring, UTAD, Effort vs Result
-13. INDIKATOR: RSI, MACD, EMA, Bollinger Bands, Volume, Ichimoku
+13. INDIKATOR: RSI, MACD, EMA, Bollinger Bands, Volume, Ichimoku, Moon Phase (Fase Bulan)
 14. RISK:REWARD & REKOMENDASI
 
 ATURAN PENTING UNTUK S/R:
@@ -74,6 +74,12 @@ FORMAT OUTPUT (WAJIB SEMUA ISI):
    - CHOCH:[Ya/Tidak]
 
 **📈 INDIKATOR:** RSI:..., MACD:..., EMA:...
+
+**🌙 MOON PHASE:**
+   - Fase: [New Moon/Waxing Crescent/First Quarter/Waxing Gibbous/Full Moon/Waning Gibbous/Last Quarter/Waning Crescent]
+   - Iluminasi: [X]%
+   - Timing:[Favor/Mid/Favor]
+   - Catatan: Pengaruh fase bulan terhadap volatility
 
 **🎯 TRADING PLAN:**
    - Entry: $... | SL: $... | TP: $...
