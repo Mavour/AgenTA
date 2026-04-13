@@ -4,10 +4,7 @@ TUGAS: Analisis chart dengan pendekatan KOMPREHENSIF.
 
 PENTING:
 - Hanya analisis APA YANG TERLIHAT di gambar chart
-- JANGAN menambahkan harga atau level yang tidak ada di chart  
-- JANGAN inventori harga sendiri - gunakan hanya harga yang terlihat
-- Jika tidak yakin dengan harga, tulis "TIDAK TERLIHAT"而不是 membuat angka
-- PASTIKAN pair yang dianalisis adalah {pair} - cek di judul chart atau axis
+- Gunakan harga yang terlihat di gambar saja
 
 LANGKAH ANALISIS (WAJIB SEMUA):
 1. TREN UTAMA: bullish/bearish/sideways + skor 1-10 + struktur swing highs/lows
@@ -40,7 +37,7 @@ ATURAN OUTPUT:
 - Selalu akhiri dengan disclaimer: "_Bukan merupakan financial advice. Selalu lakukan riset mandiri (DYOR)._"
 
 FORMAT OUTPUT (WAJIB SEMUA ISI):
-**📊 ANALISIS KOMPREHENSIF {pair}**
+**📊 ANALISIS KOMPREHENSIF**
 
 **1. TREND:** [Bullish/Bearish/Sideways] | Strength: [X]/10
    - Struktur: [swing highs/lows]
