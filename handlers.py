@@ -102,25 +102,25 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         photo_cache[user_id] = (image_bytes, caption)
         last_analysis_cache[user_id] = "chart"
-
-pair = "BTC"
+        
+        pair = "BTC"
         if caption:
             import re
             match = re.search(r"([A-Z]{2,10})(?:/|\s)", caption.upper())
             if match:
                 pair = match.group(1)
-            
-            prediction = get_market_prediction(chart_context, pair)
-            prediction_text = format_market_prediction(prediction, pair=pair)
-            
-            last_analysis_cache[user_id] = "trend"
-            await status_msg.edit_text(prediction_text, parse_mode="Markdown")
-            return
+        
+        prediction = get_market_prediction(chart_context, pair)
+        prediction_text = format_market_prediction(prediction, pair=pair)
+        
+        last_analysis_cache[user_id] = "trend"
+        await status_msg.edit_text(prediction_text, parse_mode="Markdown")
+        return
 
-        except Exception as e:
-            logger.error(f"Error in market prediction: {type(e).__name__}: {e}")
-            await _handle_qa_with_context(update, text)
-            return
+    except Exception as e:
+        logger.error(f"Error in market prediction: {type(e).__name__}: {e}")
+        await _handle_qa_with_context(update, text)
+        return
 
     await _handle_qa_with_context(update, text)
 
