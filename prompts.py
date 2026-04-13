@@ -33,7 +33,7 @@ ATURAN OUTPUT:
 - Selalu akhiri dengan disclaimer: "_Bukan merupakan financial advice. Selalu lakukan riset mandiri (DYOR)._"
 
 FORMAT OUTPUT (WAJIB SEMUA ISI):
-**📊 ANALISIS KOMPREHENSIF [{pair}]**
+**📊 ANALISIS KOMPREHENSIF**
 
 **1. TREND:** [Bullish/Bearish/Sideways] | Strength: [X]/10
    - Struktur: [swing highs/lows]
