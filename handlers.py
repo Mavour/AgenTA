@@ -10,6 +10,7 @@ from utils import (
     format_error_message,
     format_welcome,
     format_help,
+    get_moon_phase,
 )
 from data.journal import save_analysis, format_journal_list, format_weekly_report
 from services.news_service import fetch_crypto_news, format_news_response, get_crypto_prices
@@ -474,6 +475,18 @@ async def twitter_status_command(update: Update, context: ContextTypes.DEFAULT_T
     status = check_twitter_cookie()
     await update.message.reply_text(
         f"🐦 *Twitter Cookie Status*\n\n{status['message']}",
+        parse_mode="Markdown"
+    )
+
+
+async def moon_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    moon = get_moon_phase()
+    await update.message.reply_text(
+        f"🌙 *Moon Phase*\n\n"
+        f"Fase: *{moon['phase']}*\n"
+        f"Iluminasi: {moon['illumination']}%\n"
+        f"Timing: {moon['timing']}\n\n"
+        f"_Bukan financial advice._",
         parse_mode="Markdown"
     )
 
