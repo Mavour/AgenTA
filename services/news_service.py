@@ -9,19 +9,13 @@ def fetch_crypto_news(limit: int = 10):
     try:
         url = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN"
         params = {"limit": limit}
-        response = requests.get(url, params=params, timeout=15)
-        logger.info(f"News API response: {response.status_code}")
+        response = requests.get(url, params=params, timeout=10)
         
         if response.status_code == 200:
             data = response.json()
             news_data = data.get("Data", [])
-            logger.info(f"Got {len(news_data)} news articles")
             if news_data:
                 return news_data
-    except requests.exceptions.Timeout:
-        logger.error("News API timeout")
-    except requests.exceptions.ConnectionError:
-        logger.error("News API connection error")
     except Exception as e:
         logger.error(f"News API error: {e}")
     
@@ -30,23 +24,30 @@ def fetch_crypto_news(limit: int = 10):
 
 def fetch_news_fallback(limit: int = 10):
     try:
-        url = "https://cryptopanic.com/api/v1/posts/"
-        params = {"auth_token": "public", "kind": "news", "limit": limit}
-        response = requests.get(url, params=params, timeout=15)
-        
-        if response.status_code == 200:
-            data = response.json()
-            results = data.get("results", [])
-            news = []
-            for item in results:
-                news.append({
-                    "title": item.get("title", "No title"),
-                    "source_info": {"name": item.get("domain", "Unknown")},
-                    "url": item.get("url", "")
-                })
-            return news
+        import feedparser
+        feeds = [
+            "https://cointelegraph.com/rss",
+            "https://www.coindesk.com/arc/outboundfeeds/rss/"
+        ]
+        news = []
+        for feed_url in feeds:
+            try:
+                response = requests.get(feed_url, timeout=8)
+                if response.status_code == 200:
+                    feed = feedparser.parse(response.text)
+                    for entry in feed.entries[:limit // 2]:
+                        news.append({
+                            "title": entry.get("title", "No title")[:70],
+                            "source_info": {"name": "Cointelegraph/Coindesk"},
+                            "url": entry.get("link", "")
+                        })
+                        if len(news) >= limit:
+                            break
+            except Exception as e:
+                logger.error(f"RSS feed error: {e}")
+        return news
     except Exception as e:
-        logger.error(f"Fallback news API error: {e}")
+        logger.error(f"Fallback news error: {e}")
     
     return []
 
