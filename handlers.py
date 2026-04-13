@@ -203,7 +203,20 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pair = "BTC"
             if user_id in photo_cache:
                 _, caption = photo_cache[user_id]
-                pair = caption.split()[0] if caption else "BTC"
+pair = "BTC"
+    if caption:
+        caption_upper = caption.upper()
+        known_coins = ["BTC", "ETH", "SOL", "XRP", "ADA", "BNB", "DOGE", "AVAX", "DOT", "MATIC", "LINK", "UNI", "ATOM", "LTC", "ETC", "XLM", "APT", "ARB", "OP", "NEAR", "FIL", "ALGO", "VET", "HBAR", "ICP", "SAND", "MANA", "AXS", "AAVE", "MKR", "SNX", "CRV"]
+        
+        for coin in known_coins:
+            if coin in caption_upper:
+                pair = coin
+                break
+        else:
+            import re
+            match = re.search(r"([A-Z]{2,10})(?:/|\s)", caption_upper)
+            if match:
+                pair = match.group(1)
             
             prediction = get_market_prediction(chart_context, pair)
             prediction_text = format_market_prediction(prediction, pair=pair)
