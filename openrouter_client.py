@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_CHAT = "minimax/minimax-m2.5:free"
-MODEL_VISION = "google/gemma-3n-ev4:free"
+MODEL_VISION = "nvidia/nemotron-nano-12b-v2-vl:free"
 TIMEOUT = 120
 MAX_RETRIES = 3
 BASE_RETRY_DELAY = 3
@@ -105,12 +105,12 @@ async def analyze_chart(image_bytes: bytes, caption: str = "", pair: str = "BTC"
     if caption.strip():
         user_content.append({
             "type": "text",
-            "text": f"INI ADALAH CHART {pair}. {caption.strip()}"
+            "text": f"PASTIKAN {pair} - CEK JUDUL CHART di gambar untuk memastikan pair yang dianalisis!. {caption.strip()}"
         })
     else:
         user_content.append({
             "type": "text",
-            "text": f"Analisis chart {pair}. JANGAN membuat harga sendiri - hanya gunakan harga yang terlihat di gambar."
+            "text": f"CEK JUDUL CHART di bagian atas gambar untuk tau pair yang mana. PASTIKAN ini adalah chart {pair}. Hanya analisis harga yang terlihat di gambar."
         })
 
     moon_advice = "Favor untuk entry baru" if moon["phase"] == "New Moon" else "Volatility tinggi - take profit" if moon["phase"] == "Full Moon" else "Building phase" if moon["phase"] in ["Waxing Crescent", "First Quarter"] else "Evaluasi posisi"
