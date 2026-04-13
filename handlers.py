@@ -102,7 +102,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         photo_cache[user_id] = (image_bytes, caption)
         last_analysis_cache[user_id] = "chart"
-        
+
         pair = "BTC"
         if caption:
             import re
@@ -110,19 +110,28 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if match:
                 pair = match.group(1)
         
-        prediction = get_market_prediction(chart_context, pair)
-        prediction_text = format_market_prediction(prediction, pair=pair)
+        analysis = await analyze_chart(image_bytes, caption, pair)
+        last_analysis_text_cache[user_id] = analysis
+
+        signal = "bullish" if "bullish" in analysis.lower() else "bearish" if "bearish" in analysis.lower() else None
+        save_analysis(user_id, analysis, pair=pair, timeframe="Unknown", signal=signal)
+
+        keyboard = [
+            [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
         
-        last_analysis_cache[user_id] = "trend"
-        await status_msg.edit_text(prediction_text, parse_mode="Markdown")
-        return
+        await status_msg.edit_text(analysis, parse_mode="Markdown", reply_markup=reply_markup)
 
     except Exception as e:
-        logger.error(f"Error in market prediction: {type(e).__name__}: {e}")
-        await _handle_qa_with_context(update, text)
-        return
-
-    await _handle_qa_with_context(update, text)
+        logger.exception("Error in photo handler: %s", type(e).__name__)
+        try:
+            await status_msg.edit_text(
+                format_error_message("Terjadi kesalahan saat memproses gambar."),
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
