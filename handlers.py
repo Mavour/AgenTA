@@ -480,15 +480,64 @@ async def twitter_status_command(update: Update, context: ContextTypes.DEFAULT_T
 
 
 async def moon_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    pair = context.args[0].upper() if context.args else None
+    
     moon = get_moon_phase()
-    await update.message.reply_text(
-        f"🌙 *Moon Phase*\n\n"
-        f"Fase: *{moon['phase']}*\n"
-        f"Iluminasi: {moon['illumination']}%\n"
-        f"Timing: {moon['timing']}\n\n"
-        f"_Bukan financial advice._",
-        parse_mode="Markdown"
-    )
+    
+    if pair:
+        from services.news_service import get_crypto_prices
+        prices = get_crypto_prices()
+        price_info = ""
+        
+        known_pairs = {"BTC": "Bitcoin", "ETH": "Ethereum", "SOL": "Solana", "XRP": "Ripple", 
+                     "ADA": "Cardano", "BNB": "BNB", "DOGE": "Dogecoin", "AVAX": "Avalanche",
+                     "DOT": "Polkadot", "MATIC": "Polygon", "LINK": "Chainlink", "UNI": "Uniswap"}
+        
+        coin_name = known_pairs.get(pair, pair)
+        
+        if pair in ["BTC", "ETH", "SOL"]:
+            try:
+                from services.news_fetcher import fetch_coingecko_news
+                news = fetch_coingecko_news(5)
+                for n in news:
+                    if pair in n.get("title", "").upper():
+                        chg = n.get("change_24h", 0)
+                        price_info = f"\n📊 {pair} 24h: {chg:+.2f}%" if chg else ""
+                        break
+            except:
+                pass
+        
+        phase_advice = ""
+        if moon["phase"] == "New Moon":
+            phase_advice = "🌓 Mulai siklus baru - Favor untuk entry baru"
+        elif moon["phase"] == "Full Moon":
+            phase_advice = "🌕 Peak volatility - Pertimbangkan take profit"
+        elif moon["phase"] in ["Waxing Crescent", "First Quarter"]:
+            phase_advice = "🌓 Building phase - Akumulasi posisi"
+        elif moon["phase"] in ["Waning Gibbous", "Last Quarter"]:
+            phase_advice = "🌗 Koreksi - Evaluasi posisi"
+        else:
+            phase_advice = "🌘 Penyiapan - Tunggu timing baru"
+        
+        await update.message.reply_text(
+            f"🌙 *Moon Phase - {coin_name}*\n\n"
+            f"Fase: *{moon['phase']}*\n"
+            f"Iluminasi: {moon['illumination']}%\n"
+            f"{price_info}\n\n"
+            f"📋 *Insight:* {phase_advice}\n\n"
+            f"_Bukan financial advice._",
+            parse_mode="Markdown"
+        )
+    else:
+        await update.message.reply_text(
+            f"🌙 *Moon Phase*\n\n"
+            f"Fase: *{moon['phase']}*\n"
+            f"Iluminasi: {moon['illumination']}%\n"
+            f"Timing: {moon['timing']}\n\n"
+            f"Gunakan `/moon BTC` untuk insight token spesifik.\n\n"
+            f"_Bukan financial advice._",
+            parse_mode="Markdown"
+        )
 
 
 async def set_twitter_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
