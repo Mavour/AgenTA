@@ -103,20 +103,12 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         photo_cache[user_id] = (image_bytes, caption)
         last_analysis_cache[user_id] = "chart"
 
-        pair = "BTC"
+pair = "BTC"
         if caption:
-            caption_upper = caption.upper()
-known_coins = ["BTC", "ETH", "SOL", "XRP", "ADA", "BNB", "DOGE", "AVAX", "DOT", "MATIC", "LINK", "UNI", "ATOM", "LTC", "ETC", "XLM", "APT", "ARB", "OP", "NEAR", "FIL", "ALGO", "VET", "HBAR", "ICP", "SAND", "MANA", "AXS", "AAVE", "MKR", "SNX", "CRV", "HYPE", "PEPE", "WIF", "BONK", "MYRO", "WLD", "BLUR", "SUI", "SEI", "INJ", "TIA", "IMX", "RENDER", "METIS", "RON", "SHIB"]
-            
-                    for coin in known_coins:
-                        if coin in caption_upper:
-                            pair = coin
-                            break
-                    else:
-                        import re
-                        match = re.search(r"([A-Z]{2,10})(?:/|\s)", caption_upper)
-                        if match:
-                            pair = match.group(1)
+            import re
+            match = re.search(r"([A-Z]{2,10})(?:/|\s)", caption.upper())
+            if match:
+                pair = match.group(1)
             
             prediction = get_market_prediction(chart_context, pair)
             prediction_text = format_market_prediction(prediction, pair=pair)
