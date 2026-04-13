@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_CHAT = "minimax/minimax-m2.5:free"
-MODEL_VISION = "microsoft/phi-4-vision-instruct:free"
+MODEL_VISION = "google/gemma-3n-ev4:free"
 TIMEOUT = 120
 MAX_RETRIES = 3
 BASE_RETRY_DELAY = 3
