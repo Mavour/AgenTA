@@ -40,6 +40,7 @@ MENU_KEYBOARD = ReplyKeyboardMarkup(
 
 photo_cache = {}
 photo_cache_2 = {}
+multi_tf_cache = {}
 last_analysis_cache = {}
 last_analysis_text_cache = {}
 
@@ -110,11 +111,11 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        photo_cache[user_id] = (image_bytes, caption)
+        photo_cache[user_id] = (image_bytes, caption, timeframe)
         last_analysis_cache[user_id] = "chart"
 
         pair = "BTC"
-        timeframe = "Unknown"
+        tf = "Unknown"
         
         if caption:
             import re
@@ -124,9 +125,22 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             tf_match = re.search(r"(\d+[mMdDhH])", caption)
             if tf_match:
-                timeframe = tf_match.group(1).upper()
+                tf = tf_match.group(1).upper()
         
-        context = f"Analisis chart {pair} TF {timeframe}" + (f" - {caption}" if caption else "")
+        multi_key = f"{user_id}_{pair}"
+        
+        if multi_key in multi_tf_cache and multi_tf_cache[multi_key]:
+            img1, tf1, cap1 = multi_tf_cache[multi_key]
+            await _handle_multi_tf(update, status_msg, img1, image_bytes, pair, tf1, tf, cap1, caption)
+            return
+        
+        multi_tf_cache[multi_key] = (image_bytes, tf, caption)
+        
+        if len(multi_tf_cache) > 50:
+            oldest = list(multi_tf_cache.keys())[0]
+            del multi_tf_cache[oldest]
+        
+        context = f"Analisis chart {pair} TF {tf}" + (f" - {caption}" if caption else "")
         analysis = await analyze_chart(image_bytes, context, pair)
         last_analysis_text_cache[user_id] = analysis
 
@@ -143,7 +157,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif bearish_count > bullish_count:
             signal = "bearish"
         
-        save_analysis(user_id, analysis, pair=pair, timeframe=timeframe, signal=signal)
+        save_analysis(user_id, analysis, pair=pair, timeframe=tf, signal=signal)
 
         keyboard = [
             [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
@@ -161,6 +175,46 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         except Exception:
             pass
+
+
+async def _handle_multi_tf(update, status_msg, img1_bytes, img2_bytes, pair, tf1, tf2, caption1, caption2):
+    await status_msg.edit_text(f"🔄 *Membandingkan {tf1} vs {tf2}...*", parse_mode="Markdown")
+    
+    analysis1 = await analyze_chart(img1_bytes, f"Chart {pair} TF {tf1} - {caption1}", pair)
+    analysis2 = await analyze_chart(img2_bytes, f"Chart {pair} TF {tf2} - {caption2}", pair)
+    
+    lines = [
+        f"📊 *Multi-Timeframe Analysis: {pair}*\n",
+        f"┌{'─'*20}┬{'─'*20}┐",
+        f"│ {tf1:<18} │ {tf2:<18} │",
+        f"├{'─'*20}┼{'─'*20}┤",
+    ]
+    
+    for line in analysis1.split('\n'):
+        if 'TREND' in line.upper():
+            lines.append(f"│ {line[:18]:<18} │")
+            break
+    
+    for line in analysis2.split('\n'):
+        if 'TREND' in line.upper():
+            lines[lines.index(lines[-1])] = f"│ {lines[-1][:20]:<18} │ {line[:18]:<18} │"
+            break
+    
+    lines.append(f"└{'─'*20}┴{'─'*20}┘")
+    lines.append("")
+    lines.append(f"📈 *Summary:*")
+    
+    if "bullish" in analysis1.lower() and "bullish" in analysis2.lower():
+        lines.append("🟢 Konfirmasi Bullish di kedua timeframe")
+    elif "bearish" in analysis1.lower() and "bearish" in analysis2.lower():
+        lines.append("🔴 Konfirmasi Bearish di kedua timeframe")
+    else:
+        lines.append("⚠️ Konflik sinyal - berhati-hati")
+    
+    lines.append("")
+    lines.append("_Bukan financial advice._")
+    
+    await status_msg.edit_text("\n".join(lines), parse_mode="Markdown")
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
