@@ -7,11 +7,21 @@ PENTING:
 - Gunakan harga yang terlihat di gambar saja
 - DETEKSI TIMEFRAME: Cek label waktu di axis X (contoh: "12:00", "08:00" = 1H; "00:00" = 4H; Tanggal saja = 1D; Bulan = 1W/1M)
 
+PERINGATAN PENTING:
+- Untuk RSI/MACD/Fibonacci: GUNAKAN HANYA nilai yang TERLIHAT di indicator panel atau chart
+- Jika angka tidak terlihat, tulis "TIDAK TERLIHAT" - JANGAN membuat angka sendiri
+- Sering terjadi kesalahan: AI mengarang nilai RSI/Fibonacci yang tidak ada di chart
+
 LANGKAH ANALISIS (WAJIB SEMUA):
 1. TREN UTAMA: bullish/bearish/sideways + skor 1-10 + struktur swing highs/lows
-2. SUPPORT/RESISTANCE: level kunci dengan harga spesifik
+2. SUPPORT/RESISTANCE: level kunci dengan harga spesifik yang TERLIHAT di chart
 3. CANDLESTICK: Doji, Hammer, Shooting Star, Engulfing, Morning/Evening Star, dll
-4. CHART PATTERNS: H&S, Double Top/Bottom, Triangle, Flag, Wedge, Rectangle, Cup & Handle
+4. CHART PATTERNS: 
+   - Triangle: garis converging (semakin sempit)
+   - Flag: channel miring setelah move kuat (biasanya 45°)
+   - Wedge: converging tapi melebar ke atas/bawah
+   - H&S: peak - trough - peak lebih tinggi (top) atau sebaliknya (bottom)
+   - Double Top/Bottom: dua peak/trough di level sama
 5. SMART MONEY CONCEPTS: Order Block, FVG, Liquidity Grab, Institutional, Liquidation, Ice Berg, Whale
 6. ELLIOTT WAVE:identifikasi gelombang impulse (1-5) dan koreksi (A-B-C), catat wave structure
 7. FIBONACCI: Retracement (23.6%, 38.2%, 50%, 61.8%, 78.6%) dan Extension (127.2%, 161.8%)

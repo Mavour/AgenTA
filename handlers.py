@@ -114,18 +114,36 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         last_analysis_cache[user_id] = "chart"
 
         pair = "BTC"
+        timeframe = "Unknown"
+        
         if caption:
             import re
-            match = re.search(r"([A-Z]{2,10})(?:/|\s)", caption.upper())
-            if match:
-                pair = match.group(1)
+            pair_match = re.search(r"([A-Z]{2,10})(?:/|\s)", caption.upper())
+            if pair_match:
+                pair = pair_match.group(1)
+            
+            tf_match = re.search(r"(\d+[mMdDhH])", caption)
+            if tf_match:
+                timeframe = tf_match.group(1).upper()
         
-        context = f"Analisis chart {pair}" + (f" - {caption}" if caption else "")
+        context = f"Analisis chart {pair} TF {timeframe}" + (f" - {caption}" if caption else "")
         analysis = await analyze_chart(image_bytes, context, pair)
         last_analysis_text_cache[user_id] = analysis
 
-        signal = "bullish" if "bullish" in analysis.lower() else "bearish" if "bearish" in analysis.lower() else None
-        save_analysis(user_id, analysis, pair=pair, timeframe="Unknown", signal=signal)
+        signal = None
+        analysis_lower = analysis.lower()
+        bullish_keywords = ["buy", "long", "naik", "bullish", "entry", "tp ", "take profit", "beli", "call"]
+        bearish_keywords = ["sell", "short", "turun", "bearish", "sl ", "stop loss", "jual", "put"]
+        
+        bullish_count = sum(1 for kw in bullish_keywords if kw in analysis_lower)
+        bearish_count = sum(1 for kw in bearish_keywords if kw in analysis_lower)
+        
+        if bullish_count > bearish_count:
+            signal = "bullish"
+        elif bearish_count > bullish_count:
+            signal = "bearish"
+        
+        save_analysis(user_id, analysis, pair=pair, timeframe=timeframe, signal=signal)
 
         keyboard = [
             [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]

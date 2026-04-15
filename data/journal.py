@@ -2,7 +2,7 @@ from data.database import add_journal, get_user_journal, clear_user_journal, get
 
 
 def save_analysis(user_id: int, analysis_text: str, pair: str = None, timeframe: str = None, signal: str = None, price_entry: float = None):
-    KNOWN_COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "BNB", "DOGE", "AVAX", "DOT", "MATIC", "LINK", "UNI", "ATOM", "LTC", "ETC", "XLM", "APT", "ARB", "OP", "NEAR", "FIL", "ALGO", "VET", "HBAR", "ICP", "SAND", "MANA", "AXS", "AAVE", "MKR", "SNX", "CRV"]
+    KNOWN_COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "BNB", "DOGE", "AVAX", "DOT", "MATIC", "LINK", "UNI", "ATOM", "LTC", "ETC", "XLM", "APT", "ARB", "OP", "NEAR", "FIL", "ALGO", "VET", "HBAR", "ICP", "SAND", "MANA", "AXS", "AAVE", "MKR", "SNX", "CRV", "HYPE", "PEPE", "WIF", "BONK", "MYRO", "SUI", "SEI", "INJ", "TIA", "IMX", "RENDER", "METIS", "RON", "SHIB", "XPL", "BLUR", "WLD", "JTO", "WEN", "BONK", "STX", "LSD", "TIA"]
     
     if pair:
         pair = pair.upper()
