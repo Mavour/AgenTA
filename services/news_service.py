@@ -178,3 +178,53 @@ def fetch_prices_fallback():
         logger.error(f"Fallback price API error: {e}")
     
     return None
+
+
+def get_open_interest(pair: str = "BTC") -> dict:
+    try:
+        pair_id = pair.upper()
+        coin_map = {
+            "BTC": "bitcoin",
+            "ETH": "ethereum", 
+            "SOL": "solana",
+            "XRP": "ripple",
+            "ADA": "cardano",
+            "DOGE": "dogecoin",
+            "HYPE": "hyper-v2",
+            "PEPE": "pepe",
+            "WIF": "wif",
+            "BONK": "bonk"
+        }
+        
+        coin_id = coin_map.get(pair_id, pair_id.lower())
+        
+        url = f"https://api.coinmarketcap.com/api/v3/coins/{coin_id}/market-data"
+        params = {"quote": "usd"}
+        response = requests.get(url, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            oi = data.get("data", {}).get("open_interest")
+            if oi:
+                return {
+                    "open_interest": oi,
+                    "source": "CoinMarketCap"
+                }
+    except Exception as e:
+        logger.error(f"Open Interest API error: {e}")
+    
+    try:
+        url = f"https://api.jup.ag/open-interest/v1/{pair.upper()}"
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            oi = data.get("open_interest")
+            if oi:
+                return {
+                    "open_interest": float(oi),
+                    "source": "Jupiter"
+                }
+    except Exception as e:
+        logger.error(f"Jupiter OI error: {e}")
+    
+    return None

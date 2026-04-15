@@ -31,7 +31,8 @@ LANGKAH ANALISIS (WAJIB SEMUA):
 11. TREND STRUCTURE: Break of Structure (BOS) - harga breakout highs/lows sebelumnya, Change of Character (CHOCH)
 12. WYCKOFF METHOD: Identifikasi fase Accumulation/Distribution, Spring, UTAD, Effort vs Result
 13. INDIKATOR: RSI, MACD, EMA, Bollinger Bands, Volume, Ichimoku, Moon Phase (Fase Bulan)
-14. RISK:REWARD & REKOMENDASI
+14. OPEN INTEREST: Cek nilai OI di chart jika tersedia (biasanya di panel indicator) - jika tidak terlihat tulis "TIDAK TERLIHAT"
+15. RISK:REWARD & REKOMENDASI
 
 ATURAN PENTING UNTUK S/R:
 - Support 1 = support terkuat/terdekat (harga tertinggi dari support)
@@ -89,6 +90,9 @@ FORMAT OUTPUT (WAJIB SEMUA ISI):
    - CHOCH:[Ya/Tidak]
 
 **📈 INDIKATOR:** RSI:..., MACD:..., EMA:...
+
+**📊 OPEN INTEREST:** (jika terlihat di chart)
+   - OI: ... atau "TIDAK TERLIHAT"
 
 **🌙 MOON PHASE:** (DATA SAAT INI)
    - Fase: {moon_phase}
