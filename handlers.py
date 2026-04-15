@@ -140,6 +140,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             oldest = list(multi_tf_cache.keys())[0]
             del multi_tf_cache[oldest]
         
+        hint_msg = f"📊 Chart {pair} {tf} diterima! 📨 Kirim chart timeframe lain (contoh: 1H) untuk comparação.\n\nKetik /compare untuk melihat comparison terbaru."
+        
         context = f"Analisis chart {pair} TF {tf}" + (f" - {caption}" if caption else "")
         analysis = await analyze_chart(image_bytes, context, pair)
         last_analysis_text_cache[user_id] = analysis
@@ -159,12 +161,14 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         save_analysis(user_id, analysis, pair=pair, timeframe=tf, signal=signal)
 
+        hint_msg = f"\n\n💡 _Kirim chart timeframe lain ({'1H' if tf in ['4H','D'] else '4H' if tf in ['1H','D'] else '1D'}) untuk comparison._"
+        
         keyboard = [
             [InlineKeyboardButton("🔄 Analisis Ulang", callback_data="retry_analysis"), InlineKeyboardButton("📄 PDF", callback_data="export_pdf")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
-        await status_msg.edit_text(analysis, parse_mode="Markdown", reply_markup=reply_markup)
+        await status_msg.edit_text(analysis + hint_msg, parse_mode="Markdown", reply_markup=reply_markup)
 
     except Exception as e:
         logger.exception("Error in photo handler: %s", type(e).__name__)
@@ -549,3 +553,31 @@ async def set_twitter_command(update: Update, context: ContextTypes.DEFAULT_TYPE
             "❌ Gagal menyimpan cookie. Coba lagi.",
             parse_mode="Markdown"
         )
+
+
+async def compare_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    pair = context.args[0].upper() if context.args else None
+    
+    if not pair:
+        await update.message.reply_text(
+            "⚠️ *Format salah!*\n\nGunakan: /compare BTC\n\nAtau kirim 2 chart berurutan dengan pair sama.",
+            parse_mode="Markdown"
+        )
+        return
+    
+    multi_key = f"{user_id}_{pair}"
+    
+    if multi_key not in multi_tf_cache or not multi_tf_cache[multi_key]:
+        await update.message.reply_text(
+            f"⚠️ *Belum ada chart untuk {pair}*\n\nKirim chart {pair} pertama dulu, lalu kirim chart timeframe lain.",
+            parse_mode="Markdown"
+        )
+        return
+    
+    img1, tf1, cap1 = multi_tf_cache[multi_key]
+    
+    await update.message.reply_text(
+        f"📊 Chart {pair} tersimpan:\n• Timeframe 1: {tf1}\n\nKirim chart {pair} dengan timeframe lain untuk comparison.",
+        parse_mode="Markdown"
+    )
