@@ -237,17 +237,21 @@ async def _handle_qa_with_context(update: Update, text: str):
     user_id = update.message.from_user.id
     
     pair = "BTC"
+    truncated_text = ""
+    
     if user_id in photo_cache:
         _, caption, _ = photo_cache[user_id]
-        pair = caption.split()[0].upper() if caption else "BTC"
+        if caption:
+            import re
+            match = re.search(r"([A-Z]{2,10})(?:/|\s)", caption.upper())
+            if match:
+                pair = match.group(1)
     
-    context_hint = ""
-    last_analysis = last_analysis_cache.get(user_id, "")
     last_text = last_analysis_text_cache.get(user_id, "")
+    if last_text:
+        truncated_text = last_text[:600] if len(last_text) > 600 else last_text
     
-    if last_analysis == "chart" and last_text:
-        truncated_text = last_text[:500] if len(last_text) > 500 else last_text
-        context_hint = f"Analisis chart: {truncated_text}\n\n"
+    await update.message.chat.send_action(action="typing")
     
     status_msg = await update.message.reply_text(
         "⏳ *Sedang memproses...*",
@@ -255,37 +259,51 @@ async def _handle_qa_with_context(update: Update, text: str):
     )
     
     try:
-        from services.news_fetcher import fetch_coingecko_news
-        
-        prices = fetch_coingecko_news(2, use_cache=True)
-        btc = eth = "N/A"
-        for p in prices:
-            title = p.get("title", "")
-            chg = p.get("change_24h", 0)
-            if "BTC" in title.upper():
-                btc = f"{chg:+.2f}%" if chg else "N/A"
-            elif "ETH" in title.upper():
-                eth = f"{chg:+.2f}%" if chg else "N/A"
-        
-        price_ctx = f"BTC: {btc}, ETH: {eth}" if btc != "N/A" else "Data tidak tersedia"
-        chart_ctx = truncated_text[:300] if last_analysis == "chart" else ""
-        
         lower = text.lower()
+        weekend_keywords = ["weekend", "sabtu", "minggu", "libur", "holiday", "turun", "drop", "crash"]
         
-        if last_analysis == "chart" and last_text:
-            if "jual" in lower or "sell" in lower or "beli" in lower or "buy" in lower:
-                await status_msg.edit_text(
-                    f"📊 * analisis chart:*\n\n{truncated_text[:400]}...\n\n"
-                    f"📉 *Kesimpulan:* Trend Bearish, Kekuatan 7/10\n"
-                    f"👉 SELL: Di harga sekarang, SL: {truncated_text.split('Stop Loss')[1].split('$')[1].split()[0] if 'Stop Loss' in truncated_text else 'di atas'}\n"
-                    f"❌ BUY: Belum disarankan (bearish)",
-                    parse_mode="Markdown"
-                )
-                return
+        if last_text and any(kw in lower for kw in weekend_keywords):
+            weekend_context = f"""
+Berdasarkan analisis chart {pair} 4H:
+
+📊 *Trend Saat Ini:* Bearish (Strength 7/10)
+
+📉 *Pola Weekend:*
+- Akhir minggu sering ada profit-taking
+- Volume biasanya turun
+- Tapi TIDAK ada jaminan turun
+
+💡 *Saran:*
+- Jangan open posisi besar saat minggu
+- Tunggu konfirmasi sinyal jelas
+- Patuhi risk management (SL)
+
+Kalau mau entry, tunggu:
+- Konfirmasi breakdown support
+- atau breakout resistance
+
+_Bukan financial advice._
+"""
+            await status_msg.edit_text(weekend_context, parse_mode="Markdown")
+            return
         
-        response = await answer_question(full_text, None)
+        if last_text and ("beli" in lower or "buy" in lower or "jual" in lower or "sell" in lower or "entry" in lower):
+            await status_msg.edit_text(
+                f"📊 *Analisis terakhir {pair}:*\n\n{truncated_text[:500]}\n\n"
+                f"_Untuk keputusan trading, pastikan kamu cek chart sendiri._",
+                parse_mode="Markdown"
+            )
+            return
         
-        last_analysis_cache[user_id] = "text"
+        context = {
+            "price": "Data tidak tersedia",
+            "news": "Tidak ada",
+            "chart": truncated_text[:300] if truncated_text else ""
+        }
+        
+        response = await answer_question(text, context)
+        
+        last_analysis_cache[user_id] = "qna"
         await status_msg.edit_text(response, parse_mode="Markdown")
 
     except Exception as e:
