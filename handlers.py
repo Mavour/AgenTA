@@ -258,7 +258,7 @@ async def _handle_qa_with_context(update: Update, text: str):
         parse_mode="Markdown"
     )
     
-    try:
+try:
         lower = text.lower()
         weekend_keywords = ["weekend", "sabtu", "minggu", "libur", "holiday"]
         
@@ -269,9 +269,9 @@ async def _handle_qa_with_context(update: Update, text: str):
                 f"📊 *Namun:* TIDAK ada jaminan - tetap harus lihat sinyal\n\n"
                 f"💡 *Saran:*\n"
                 f"• Jangan position besar\n"
-                f"• Tunggu konfirmasi (breakout/b breakdown)\n"
+                f"• Tunggu konfirmasi\n"
                 f"• Patuhi SL\n\n"
-                f"📝 Analisis terakhir:\n{truncated_text[:500]}...\n\n"
+                f"📝 Analisis:\n{truncated_text[:400]}...\n\n"
                 f"_Bukan financial advice._",
                 parse_mode="Markdown"
             )
@@ -282,18 +282,21 @@ async def _handle_qa_with_context(update: Update, text: str):
         if last_text and any(kw in lower for kw in turun_keywords):
             await status_msg.edit_text(
                 f"📊 *Analisis {pair}:\n\n"
-                f"📉 *Trend:* Bearish (Strength 7/10)\n\n"
+                f"📉 Trend: Bearish\n\n"
                 f"{truncated_text[:400]}...\n\n"
-                f"💡 Jangan memaksa beli. Tunggu sinyal bullish.\n\n"
+                f"💡 Tunggu sinyal bullish.\n"
                 f"_Bukan financial advice._",
                 parse_mode="Markdown"
             )
             return
         
-        if last_text and ("beli" in lower or "buy" in lower or "jual" in lower or "sell" in lower or "entry" in lower):
+        beli_keywords = ["beli", "buy", "jual", "sell", "entry", "poin", "harga"]
+        
+        if last_text and any(kw in lower for kw in beli_keywords):
             await status_msg.edit_text(
-                f"📊 *Analisis terakhir {pair}:*\n\n{truncated_text[:500]}\n\n"
-                f"_Untuk keputusan trading, pastikan kamu cek chart sendiri._",
+                f"📊 *Analisis {pair}:\n\n"
+                f"{truncated_text[:500]}...\n\n"
+                f"_Cek chart sendiri untuk keputusan trading._",
                 parse_mode="Markdown"
             )
             return
@@ -311,9 +314,14 @@ async def _handle_qa_with_context(update: Update, text: str):
 
     except Exception as e:
         logger.error(f"Error processing question: {type(e).__name__}: {e}")
+        
+        error_msg = "Terjadi kesalahan"
+        if "RateLimit" in type(e).__name__ or "429" in str(e):
+            error_msg = "⚠️ Rate limit tercapai. Coba lagi 30 detik."
+        
         try:
             await status_msg.edit_text(
-                format_error_message(f"Terjadi kesalahan: {type(e).__name__}"),
+                format_error_message(error_msg),
                 parse_mode="Markdown"
             )
         except Exception:
