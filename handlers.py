@@ -307,10 +307,17 @@ parse_mode="Markdown"
             "chart": truncated_text[:300] if truncated_text else ""
         }
         
-        response = await answer_question(text, context)
+        if last_text:
+            await status_msg.edit_text(
+                "📊 *" + pair + "*\n\n" + truncated_text[:400] + "...\n\n_Cek chart sendiri.",
+                parse_mode="Markdown"
+            )
+            return
         
-        last_analysis_cache[user_id] = "qna"
-        await status_msg.edit_text(response, parse_mode="Markdown")
+        await status_msg.edit_text(
+            "⚠️ Kirim chart dulu untuk analisis.\n/help untuk panduan.",
+            parse_mode="Markdown"
+        )
 
     except Exception as e:
         logger.error(f"Error processing question: {type(e).__name__}: {e}")
