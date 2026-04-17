@@ -111,11 +111,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        photo_cache[user_id] = (image_bytes, caption, tf)
-        last_analysis_cache[user_id] = "chart"
-
-        pair = "BTC"
-        tf = "Unknown"
+        pair, tf = "BTC", "Unknown"
         
         if caption:
             import re
@@ -126,6 +122,9 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             tf_match = re.search(r"(\d+[mMdDhH])", caption)
             if tf_match:
                 tf = tf_match.group(1).upper()
+        
+        photo_cache[user_id] = (image_bytes, caption, tf)
+        last_analysis_cache[user_id] = "chart"
         
         multi_key = f"{user_id}_{pair}"
         
