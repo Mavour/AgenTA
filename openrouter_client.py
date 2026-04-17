@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_CHAT = "minimax/minimax-m2.5:free"
 MODEL_VISION = "nvidia/nemotron-nano-12b-v2-vl:free"
-TIMEOUT = 120
-MAX_RETRIES = 3
-BASE_RETRY_DELAY = 3
+TIMEOUT = 45
+MAX_RETRIES = 2
+BASE_RETRY_DELAY = 2
 
 
 class OpenRouterError(Exception):

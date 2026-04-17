@@ -260,31 +260,21 @@ async def _handle_qa_with_context(update: Update, text: str):
     
     try:
         lower = text.lower()
-        weekend_keywords = ["weekend", "sabtu", "minggu", "libur", "holiday", "turun", "drop", "crash"]
+        weekend_keywords = ["weekend", "sabtu", "minggu", "libur", "holiday", "turun"]
         
         if last_text and any(kw in lower for kw in weekend_keywords):
-            weekend_context = f"""
-Berdasarkan analisis chart {pair} 4H:
-
-📊 *Trend Saat Ini:* Bearish (Strength 7/10)
-
-📉 *Pola Weekend:*
-- Akhir minggu sering ada profit-taking
-- Volume biasanya turun
-- Tapi TIDAK ada jaminan turun
-
-💡 *Saran:*
-- Jangan open posisi besar saat minggu
-- Tunggu konfirmasi sinyal jelas
-- Patuhi risk management (SL)
-
-Kalau mau entry, tunggu:
-- Konfirmasi breakdown support
-- atau breakout resistance
-
-_Bukan financial advice._
-"""
-            await status_msg.edit_text(weekend_context, parse_mode="Markdown")
+            await status_msg.edit_text(
+                f"📊 *Weekend Trading - {pair}:*\n\n"
+                f"📉 *Pola:* Akhir minggu sering turun karena profit-taking\n"
+                f"📊 *Namun:* TIDAK ada jaminan - tetap harus lihat sinyal\n\n"
+                f"💡 *Saran:*\n"
+                f"• Jangan position besar\n"
+                f"• Tunggu konfirmasi (breakout/b breakdown)\n"
+                f"• Patuhi SL\n\n"
+                f"📝 Analisis terakhir:\n{truncated_text[:500]}...\n\n"
+                f"_Bukan financial advice._",
+                parse_mode="Markdown"
+            )
             return
         
         if last_text and ("beli" in lower or "buy" in lower or "jual" in lower or "sell" in lower or "entry" in lower):
