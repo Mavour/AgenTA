@@ -111,7 +111,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-        photo_cache[user_id] = (image_bytes, caption, timeframe)
+        photo_cache[user_id] = (image_bytes, caption, tf)
         last_analysis_cache[user_id] = "chart"
 
         pair = "BTC"
