@@ -260,7 +260,7 @@ async def _handle_qa_with_context(update: Update, text: str):
     
     try:
         lower = text.lower()
-        weekend_keywords = ["weekend", "sabtu", "minggu", "libur", "holiday", "turun"]
+        weekend_keywords = ["weekend", "sabtu", "minggu", "libur", "holiday"]
         
         if last_text and any(kw in lower for kw in weekend_keywords):
             await status_msg.edit_text(
@@ -272,6 +272,19 @@ async def _handle_qa_with_context(update: Update, text: str):
                 f"• Tunggu konfirmasi (breakout/b breakdown)\n"
                 f"• Patuhi SL\n\n"
                 f"📝 Analisis terakhir:\n{truncated_text[:500]}...\n\n"
+                f"_Bukan financial advice._",
+                parse_mode="Markdown"
+            )
+            return
+        
+        turun_keywords = ["turun", "drop", "crash", "sell"]
+        
+        if last_text and any(kw in lower for kw in turun_keywords):
+            await status_msg.edit_text(
+                f"📊 *Analisis {pair}:\n\n"
+                f"📉 *Trend:* Bearish (Strength 7/10)\n\n"
+                f"{truncated_text[:400]}...\n\n"
+                f"💡 Jangan memaksa beli. Tunggu sinyal bullish.\n\n"
                 f"_Bukan financial advice._",
                 parse_mode="Markdown"
             )
