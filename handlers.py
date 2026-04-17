@@ -230,7 +230,7 @@ async def _handle_qa_with_context(update: Update, text: str):
     
     pair = "BTC"
     if user_id in photo_cache:
-        _, caption = photo_cache[user_id]
+        _, caption, _ = photo_cache[user_id]
         pair = caption.split()[0].upper() if caption else "BTC"
     
     context_hint = ""
@@ -313,7 +313,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 image_bytes = await file.download_as_bytearray()
                 image_bytes = bytes(image_bytes)
             elif user_id in photo_cache:
-                image_bytes, caption = photo_cache[user_id]
+                image_bytes, caption, _ = photo_cache[user_id]
 
             if image_bytes:
                 analysis = await analyze_chart(image_bytes, caption, pair)
@@ -346,7 +346,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if user_id in last_analysis_text_cache:
                 analysis_text = last_analysis_text_cache[user_id]
                 if user_id in photo_cache:
-                    _, caption = photo_cache[user_id]
+                    _, caption, _ = photo_cache[user_id]
                     pair = caption.split()[0] if caption else "Unknown"
             else:
                 from data.database import get_user_journal
