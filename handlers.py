@@ -38,6 +38,8 @@ MENU_KEYBOARD = ReplyKeyboardMarkup(
     one_time_keyboard=False,
 )
 
+from datetime import datetime
+
 photo_cache = {}
 photo_cache_2 = {}
 multi_tf_cache = {}
@@ -127,13 +129,19 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         last_analysis_cache[user_id] = "chart"
         
         multi_key = f"{user_id}_{pair}"
+        now = datetime.now()
         
         if multi_key in multi_tf_cache and multi_tf_cache[multi_key]:
-            img1, tf1, cap1 = multi_tf_cache[multi_key]
-            await _handle_multi_tf(update, status_msg, img1, image_bytes, pair, tf1, tf, cap1, caption)
-            return
+            img1, tf1, cap1, ts1 = multi_tf_cache[multi_key]
+            time_diff = (now - ts1).total_seconds()
+            
+            if time_diff < 60:
+                await _handle_multi_tf(update, status_msg, img1, image_bytes, pair, tf1, tf, cap1, caption)
+                return
+            else:
+                del multi_tf_cache[multi_key]
         
-        multi_tf_cache[multi_key] = (image_bytes, tf, caption)
+        multi_tf_cache[multi_key] = (image_bytes, tf, caption, now)
         
         if len(multi_tf_cache) > 50:
             oldest = list(multi_tf_cache.keys())[0]
