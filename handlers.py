@@ -255,10 +255,10 @@ async def _handle_qa_with_context(update: Update, text: str):
     
     status_msg = await update.message.reply_text(
         "⏳ *Sedang memproses...*",
-        parse_mode="Markdown"
+parse_mode="Markdown"
     )
     
-try:
+    try:
         lower = text.lower()
         weekend_keywords = ["weekend", "sabtu", "minggu", "libur", "holiday"]
         
